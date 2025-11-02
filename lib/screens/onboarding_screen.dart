@@ -33,7 +33,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: 'Rejoignez-nous !',
       description:
           "Avec SenOffre, chaque opportunité compte. Développez votre activité et profitez d'un accès illimité au marché dès maintenant.",
-      icon: Icons.handshake_outlined,
+      imagePath: 'assets/images/ACCEUIL Slider 3.png',
+      backgroundImagePath: 'assets/images/SenOffre White Background.png',
       backgroundColor: const Color(0xFF4CAF50),
       isLast: true,
     ),
@@ -100,7 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 32.0),
               child: Column(
                 children: [
                   // Page indicators
@@ -110,19 +111,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       _pages.length,
                       (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == index ? 32 : 8,
-                        height: 8,
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        width: _currentPage == index ? 40 : 10,
+                        height: 10,
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? const Color(0xFF4CAF50)
-                              : Colors.grey.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(4),
+                              : Colors.grey.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                   // Buttons
                   Row(
                     children: [
@@ -131,21 +132,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: OutlinedButton(
                             onPressed: _skipToLast,
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 18),
                               side: BorderSide(
-                                color: Colors.grey.withOpacity(0.3),
-                                width: 1,
+                                color: Colors.grey.withOpacity(0.25),
+                                width: 1.5,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Passer',
                               style: TextStyle(
-                                color: Colors.grey,
+                                color: Colors.grey[700],
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
                               ),
                             ),
                           ),
@@ -153,22 +155,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       if (_currentPage < _pages.length - 1) const SizedBox(width: 16),
                       Expanded(
                         flex: _currentPage == _pages.length - 1 ? 1 : 1,
-                        child: ElevatedButton(
-                          onPressed: _nextPage,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4CAF50),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                blurRadius: 20,
+                                spreadRadius: 0,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                          child: Text(
-                            _currentPage == _pages.length - 1 ? 'Commencer' : 'Suivant',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          child: ElevatedButton(
+                            onPressed: _nextPage,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4CAF50),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              _currentPage == _pages.length - 1 ? 'Commencer' : 'Suivant',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
                         ),
@@ -189,107 +205,118 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         children: [
-          const SizedBox(height: 20),
-          // Illustration
+          const SizedBox(height: 40),
+          // Illustration with elegant frame
           Expanded(
             flex: 3,
-            child: Stack(
-              children: [
-                // Background pattern
-                Positioned.fill(
-                  child: page.backgroundImagePath != null
-                      ? Image.asset(
-                          page.backgroundImagePath!,
-                          fit: BoxFit.contain,
-                        )
-                      : CustomPaint(
-                          painter: PatternPainter(color: page.backgroundColor),
-                        ),
-                ),
-                // Main image (no circular container)
-                if (page.imagePath != null)
-                  Center(
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.elasticOut,
-                      builder: (context, value, child) {
-                        return Transform.scale(
-                          scale: value,
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Image.asset(
-                              page.imagePath!,
-                              fit: BoxFit.contain,
-                            ),
+            child: Center(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        maxWidth: 380,
+                        maxHeight: 380,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4CAF50).withOpacity(0.15),
+                            blurRadius: 40,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 10),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                // Icon for pages without custom image
-                if (page.imagePath == null && page.icon != null)
-                  Center(
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.elasticOut,
-                      builder: (context, value, child) {
-                        return Transform.scale(
-                          scale: value,
-                          child: Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(100),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: page.backgroundColor.withOpacity(0.3),
-                                  blurRadius: 30,
-                                  spreadRadius: 5,
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 20,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(32),
+                        child: Stack(
+                          children: [
+                            // Background pattern
+                            if (page.backgroundImagePath != null)
+                              Positioned.fill(
+                                child: Image.asset(
+                                  page.backgroundImagePath!,
+                                  fit: BoxFit.cover,
                                 ),
-                              ],
-                            ),
-                            child: Icon(
-                              page.icon!,
-                              size: 100,
-                              color: page.backgroundColor,
-                            ),
-                          ),
-                        );
-                      },
+                              ),
+                            // Main image with padding
+                            if (page.imagePath != null)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(40.0),
+                                  child: Image.asset(
+                                    page.imagePath!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            // Icon for pages without custom image
+                            if (page.imagePath == null && page.icon != null)
+                              Center(
+                                child: Container(
+                                  width: 160,
+                                  height: 160,
+                                  decoration: BoxDecoration(
+                                    color: page.backgroundColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(80),
+                                  ),
+                                  child: Icon(
+                                    page.icon!,
+                                    size: 80,
+                                    color: page.backgroundColor,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-              ],
+                  );
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 32),
-          // Content
+          const SizedBox(height: 48),
+          // Content with better spacing
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Column(
               children: [
                 Text(
                   page.title,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
+                    letterSpacing: -0.5,
                   ),
-                  textAlign: TextAlign.left,
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   page.description,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 15,
                     color: Colors.grey[600],
-                    height: 1.5,
+                    height: 1.6,
+                    letterSpacing: 0.2,
                   ),
-                  textAlign: TextAlign.left,
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
               ],
             ),
           ),
