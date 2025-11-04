@@ -84,40 +84,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           ),
                         ],
                       ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            top: 10,
-                            right: 10,
-                            child: Container(
-                              width: 60,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF4CAF50),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          Center(
-                            child: Container(
-                              width: 70,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: const Color(0xFF4CAF50),
-                                  width: 3,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.description,
-                                color: Color(0xFF4CAF50),
-                                size: 35,
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Image.asset(
+                          'assets/images/LOGO SEN OFFRE.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
@@ -127,14 +99,24 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             const Spacer(),
             FadeTransition(
               opacity: _fadeAnimation,
-              child: const Padding(
-                padding: EdgeInsets.only(bottom: 50),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 50),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.description,
-                      color: Color(0xFF4CAF50),
-                      size: 24,
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/images/LOGO SEN OFFRE.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                     SizedBox(height: 8),
                     Text(
