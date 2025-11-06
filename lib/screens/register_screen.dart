@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../main.dart';
 import '../services/api_service.dart';
+import '../services/user_service.dart';
 import '../models/registration_request.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -105,16 +106,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             // Vérifier si l'inscription a réussi
             if (response.success) {
-              // Sauvegarder le token d'authentification
-              // TODO: Implémenter la sauvegarde du token dans SharedPreferences
-              final authToken = response.extra.authToken;
-              final tokenType = response.extra.tokenType;
-              print('Token sauvegardé: $tokenType $authToken');
+              // Sauvegarder les informations de l'utilisateur
+              UserService.setUserFromRegistration(response);
+              
+              print('Utilisateur inscrit: ${UserService.userName}');
+              print('Token sauvegardé: ${UserService.authorizationHeader}');
 
               // Afficher un message de succès
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Inscription réussie ! Bienvenue ${response.result.name}'),
+                  content: Text('Inscription réussie ! Bienvenue ${UserService.userName}'),
                   backgroundColor: Colors.green,
                 ),
               );

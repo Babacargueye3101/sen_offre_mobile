@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../main.dart';
 import 'register_screen.dart';
+import '../services/api_service.dart';
+import '../services/user_service.dart';
+import '../models/login_request.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,20 +33,73 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
 
-      // Simuler une connexion
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // Navigation vers l'écran principal
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const MainScreen(),
-          ),
+      try {
+        // Créer la requête de connexion
+        final loginRequest = LoginRequest(
+          email: _emailController.text.trim().toLowerCase(),
+          password: _passwordController.text,
         );
+
+        // Appeler l'API de connexion
+        final response = await ApiService.loginUser(loginRequest);
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          // Vérifier si la connexion a réussi
+          if (response.success) {
+            // Sauvegarder les informations de l'utilisateur
+            UserService.setUserFromLogin(response);
+            
+            print('Utilisateur connecté: ${UserService.userName}');
+            print('Token sauvegardé: ${UserService.authorizationHeader}');
+
+            // Afficher un message de succès
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Connexion réussie ! Bienvenue ${UserService.userName}'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            // Navigation vers l'écran principal
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => const MainScreen(),
+              ),
+            );
+          } else {
+            // Si success est false, afficher le message d'erreur
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response.message ?? 'Erreur de connexion'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          // Afficher l'erreur
+          String errorMessage = 'Une erreur est survenue lors de la connexion';
+          if (e is ApiException) {
+            errorMessage = e.toString();
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
     }
   }

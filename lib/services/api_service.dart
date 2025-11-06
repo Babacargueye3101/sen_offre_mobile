@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import '../models/registration_request.dart';
 import '../models/registration_response.dart';
+import '../models/login_request.dart';
+import '../models/login_response.dart';
 import '../config/api_config.dart';
 
 class ApiService {
@@ -36,6 +38,57 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> jsonData = jsonDecode(responseBody);
         return RegistrationResponse.fromJson(jsonData);
+      } else {
+        // Gérer les erreurs de l'API
+        final Map<String, dynamic> errorData = jsonDecode(responseBody);
+        final apiError = ApiError.fromJson(errorData);
+        throw ApiException(
+          message: apiError.message,
+          statusCode: response.statusCode,
+          errors: apiError.errors,
+        );
+      }
+    } catch (e) {
+      if (e is ApiException) {
+        rethrow;
+      }
+      // Gérer les erreurs de réseau ou autres
+      throw ApiException(
+        message: 'Erreur de connexion. Veuillez vérifier votre connexion internet.',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Connexion d'un utilisateur
+  static Future<LoginResponse> loginUser(LoginRequest request) async {
+    try {
+      print('Submitting login: ${request.toJson()}');
+      
+      final client = HttpClient();
+      final uri = Uri.parse('${ApiConfig.getBaseUrl()}${ApiConfig.loginEndpoint}');
+      final httpRequest = await client.postUrl(uri);
+      
+      // Ajouter les headers
+      _headers.forEach((key, value) {
+        httpRequest.headers.set(key, value);
+      });
+      
+      // Ajouter le body
+      final body = jsonEncode(request.toJson());
+      httpRequest.write(body);
+      
+      final response = await httpRequest.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+      
+      print('Login response status: ${response.statusCode}');
+      print('Login response body: $responseBody');
+
+      client.close();
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> jsonData = jsonDecode(responseBody);
+        return LoginResponse.fromJson(jsonData);
       } else {
         // Gérer les erreurs de l'API
         final Map<String, dynamic> errorData = jsonDecode(responseBody);

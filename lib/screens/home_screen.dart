@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/user_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -15,26 +16,31 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 24,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: Color(0xFF4CAF50)),
+                    backgroundImage: UserService.isLoggedIn && UserService.userPhotoUrl.isNotEmpty
+                        ? NetworkImage(UserService.userPhotoUrl)
+                        : null,
+                    child: UserService.isLoggedIn && UserService.userPhotoUrl.isNotEmpty
+                        ? null
+                        : const Icon(Icons.person, color: Color(0xFF4CAF50)),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Bonjour,',
-                          style: TextStyle(
+                          UserService.isLoggedIn ? UserService.getWelcomeMessage().split(' ')[0] + ',' : 'Bonjour,',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 14,
                           ),
                         ),
                         Text(
-                          'M. Le Maire',
-                          style: TextStyle(
+                          UserService.isLoggedIn ? UserService.userName : 'Utilisateur',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
