@@ -1,8 +1,71 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
+import '../models/category.dart';
+import '../services/category_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<Category> _categories = [];
+  bool _showCategories = false;
+  bool _isLoadingCategories = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      setState(() {
+        _isLoadingCategories = true;
+      });
+
+      final categories = await CategoryService.getAllCategories();
+      final activeCategories = CategoryService.getActiveCategories(categories);
+
+      setState(() {
+        _categories = activeCategories;
+        _isLoadingCategories = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingCategories = false;
+      });
+      // Gérer l'erreur silencieusement ou afficher un message
+      print('Erreur lors du chargement des catégories: $e');
+    }
+  }
+
+  void _toggleCategories() {
+    setState(() {
+      _showCategories = !_showCategories;
+    });
+  }
+
+  void _selectCategory(Category category) {
+    setState(() {
+      _showCategories = false;
+    });
+    
+    // Afficher un message pour confirmer la sélection
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Catégorie sélectionnée: ${category.name}'),
+        backgroundColor: const Color(0xFF4CAF50),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,12 +251,12 @@ class HomeScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withOpacity(0.1),
-                                spreadRadius: 1,
+                                color: Colors.black.withOpacity(0.1),
                                 blurRadius: 10,
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
@@ -210,19 +273,175 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const Text(
-                                'Catégories',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+                              GestureDetector(
+                                onTap: _toggleCategories,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Catégories',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF4CAF50),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        _showCategories 
+                                          ? Icons.keyboard_arrow_up
+                                          : Icons.keyboard_arrow_down,
+                                        color: const Color(0xFF4CAF50),
+                                        size: 16,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                             ],
                           ),
                         ),
                       ),
+                      
+                      // Liste déroulante des catégories
+                      if (_showCategories) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: _isLoadingCategories
+                                ? const Padding(
+                                    padding: EdgeInsets.all(20.0),
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+                                      ),
+                                    ),
+                                  )
+                                : _categories.isEmpty
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(20.0),
+                                        child: Center(
+                                          child: Text(
+                                            'Aucune catégorie disponible',
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : Column(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFF4CAF50),
+                                              borderRadius: BorderRadius.only(
+                                                topLeft: Radius.circular(12),
+                                                topRight: Radius.circular(12),
+                                              ),
+                                            ),
+                                            child: const Row(
+                                              children: [
+                                                Icon(Icons.category, color: Colors.white, size: 16),
+                                                SizedBox(width: 8),
+                                                Text(
+                                                  'Sélectionnez une catégorie',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            constraints: const BoxConstraints(maxHeight: 200),
+                                            child: ListView.builder(
+                                              shrinkWrap: true,
+                                              itemCount: _categories.length,
+                                              itemBuilder: (context, index) {
+                                                final category = _categories[index];
+                                                return InkWell(
+                                                  onTap: () => _selectCategory(category),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 12,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      border: index < _categories.length - 1
+                                                          ? const Border(
+                                                              bottom: BorderSide(
+                                                                color: Color(0xFFE0E0E0),
+                                                                width: 0.5,
+                                                              ),
+                                                            )
+                                                          : null,
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        Container(
+                                                          width: 32,
+                                                          height: 32,
+                                                          decoration: BoxDecoration(
+                                                            color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                                            borderRadius: BorderRadius.circular(16),
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons.folder,
+                                                            color: Color(0xFF4CAF50),
+                                                            size: 16,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 12),
+                                                        Expanded(
+                                                          child: Text(
+                                                            category.name,
+                                                            style: const TextStyle(
+                                                              fontSize: 14,
+                                                              fontWeight: FontWeight.w500,
+                                                              color: Colors.black87,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const Icon(
+                                                          Icons.arrow_forward_ios,
+                                                          color: Colors.grey,
+                                                          size: 12,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                          ),
+                        ),
+                      ],
+                      
                       const SizedBox(height: 16),
                       // Sponsorisé banner
                       Padding(

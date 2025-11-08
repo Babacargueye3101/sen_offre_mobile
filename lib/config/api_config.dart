@@ -5,6 +5,7 @@ class ApiConfig {
   // Endpoints
   static const String registerEndpoint = '/users';
   static const String loginEndpoint = '/auth/login';
+  static const String categoriesEndpoint = '/categories';
   
   // Headers par défaut
   static const Map<String, String> defaultHeaders = {

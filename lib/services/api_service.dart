@@ -15,6 +15,9 @@ class ApiService {
       print('Submitting registration: ${request.toJson()}');
       
       final client = HttpClient();
+      // Désactiver la vérification SSL pour le développement local
+      client.badCertificateCallback = (cert, host, port) => true;
+      
       final uri = Uri.parse('${ApiConfig.getBaseUrl()}${ApiConfig.registerEndpoint}');
       final httpRequest = await client.postUrl(uri);
       
@@ -66,6 +69,9 @@ class ApiService {
       print('Submitting login: ${request.toJson()}');
       
       final client = HttpClient();
+      // Désactiver la vérification SSL pour le développement local
+      client.badCertificateCallback = (cert, host, port) => true;
+      
       final uri = Uri.parse('${ApiConfig.getBaseUrl()}${ApiConfig.loginEndpoint}');
       final httpRequest = await client.postUrl(uri);
       
