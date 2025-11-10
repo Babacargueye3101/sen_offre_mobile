@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/post.dart';
-import '../services/post_service.dart';
-import '../services/user_service.dart';
 import '../models/category.dart';
+import '../models/post_type.dart';
+import '../models/city.dart';
+import '../services/post_service.dart';
 import '../services/category_service.dart';
+import '../services/post_type_service.dart';
+import '../services/city_service.dart';
+import '../services/user_service.dart';
 
 class OffersListScreen extends StatefulWidget {
   const OffersListScreen({super.key});
@@ -15,6 +19,8 @@ class OffersListScreen extends StatefulWidget {
 class _OffersListScreenState extends State<OffersListScreen> {
   List<Post> _posts = [];
   List<Category> _categories = [];
+  List<PostType> _postTypes = [];
+  List<City> _cities = [];
   bool _isLoading = false;
   bool _hasMorePosts = true;
   int _currentPage = 1;
@@ -22,10 +28,12 @@ class _OffersListScreenState extends State<OffersListScreen> {
   
   // Filtres
   String _searchQuery = '';
-  String _selectedOfferType = "Appel d'offre";
-  String _selectedLocation = 'Dakar';
+  PostType? _selectedPostType;
+  City? _selectedCity;
   Category? _selectedCategory;
   bool _showCategories = false;
+  bool _showPostTypes = false;
+  bool _showCities = false;
   
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -34,6 +42,8 @@ class _OffersListScreenState extends State<OffersListScreen> {
   void initState() {
     super.initState();
     _loadCategories();
+    _loadPostTypes();
+    _loadCities();
     _loadPosts();
     _scrollController.addListener(_onScroll);
   }
@@ -60,6 +70,57 @@ class _OffersListScreenState extends State<OffersListScreen> {
       });
     } catch (e) {
       print('Erreur lors du chargement des catégories: $e');
+    }
+  }
+
+  Future<void> _loadPostTypes() async {
+    try {
+      print('🔄 Début du chargement des types d\'offres...');
+      final postTypes = await PostTypeService.getAllPostTypes();
+      print('📦 Types d\'offres reçus: ${postTypes.length}');
+      
+      for (var postType in postTypes) {
+        print('   - ID: ${postType.id}, Name: "${postType.name}", Active: ${postType.active}');
+      }
+      
+      final activePostTypes = PostTypeService.getActivePostTypes(postTypes);
+      print('✅ Types d\'offres actifs: ${activePostTypes.length}');
+      
+      setState(() {
+        _postTypes = activePostTypes;
+      });
+      
+      print('🎯 Types d\'offres chargés dans l\'état: ${_postTypes.length}');
+    } catch (e) {
+      print('❌ Erreur lors du chargement des types d\'offres: $e');
+    }
+  }
+
+  Future<void> _loadCities() async {
+    try {
+      print('🔄 Début du chargement des villes...');
+      final cities = await CityService.getAllCities();
+      print('📦 Villes reçues: ${cities.length}');
+      
+      // Afficher les 5 premières villes pour debug
+      for (int i = 0; i < cities.length && i < 5; i++) {
+        final city = cities[i];
+        print('   - ID: ${city.id}, Name: "${city.name}", Population: ${city.population}, Active: ${city.active}');
+      }
+      
+      final activeCities = CityService.getActiveCities(cities);
+      print('✅ Villes actives: ${activeCities.length}');
+      
+      // Trier par nom alphabétique pour un meilleur affichage
+      activeCities.sort((a, b) => a.name.compareTo(b.name));
+      
+      setState(() {
+        _cities = activeCities;
+      });
+      
+      print('🎯 Villes chargées dans l\'état: ${_cities.length}');
+    } catch (e) {
+      print('❌ Erreur lors du chargement des villes: $e');
     }
   }
 
@@ -127,11 +188,28 @@ class _OffersListScreenState extends State<OffersListScreen> {
     _performSearch(); // Relancer la recherche avec la nouvelle catégorie
   }
 
+  void _selectPostType(PostType? postType) {
+    setState(() {
+      _selectedPostType = postType;
+      _showPostTypes = false;
+    });
+    _performSearch(); // Relancer la recherche avec le nouveau type d'offre
+  }
+
+  void _selectCity(City? city) {
+    setState(() {
+      _selectedCity = city;
+      _showCities = false;
+    });
+    _performSearch(); // Relancer la recherche avec la nouvelle ville
+  }
+
   Widget _buildCategoryDropdown() {
     return Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
+        constraints: const BoxConstraints(maxHeight: 300), // Limiter la hauteur
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -143,8 +221,9 @@ class _OffersListScreenState extends State<OffersListScreen> {
             ),
           ],
         ),
-        child: Column(
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
             // Option "Toutes les catégories"
             InkWell(
               onTap: () => _selectCategory(null),
@@ -219,7 +298,210 @@ class _OffersListScreenState extends State<OffersListScreen> {
                   ),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostTypeDropdown() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 250), // Limiter la hauteur
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
           ],
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+            // Option "Tous les types"
+            InkWell(
+              onTap: () => _selectPostType(null),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.shopping_bag_outlined, 
+                      color: const Color(0xFF4CAF50), size: 20),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Tous les types d\'offres',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (_selectedPostType == null)
+                      const Icon(Icons.check, 
+                        color: Color(0xFF4CAF50), size: 20),
+                  ],
+                ),
+              ),
+            ),
+            // Liste des types d'offres
+            if (_postTypes.isNotEmpty)
+              ...(_postTypes.map((postType) => InkWell(
+                onTap: () => _selectPostType(postType),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.work_outline, 
+                        color: const Color(0xFF4CAF50), size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          postType.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (_selectedPostType?.id == postType.id)
+                        const Icon(Icons.check, 
+                          color: Color(0xFF4CAF50), size: 20),
+                    ],
+                  ),
+                ),
+              )).toList())
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: const Text(
+                  'Chargement des types d\'offres...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCityDropdown() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 350), // Limiter la hauteur
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+            // Option "Toutes les villes"
+            InkWell(
+              onTap: () => _selectCity(null),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on_outlined, 
+                      color: const Color(0xFF4CAF50), size: 20),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Toutes les villes',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (_selectedCity == null)
+                      const Icon(Icons.check, 
+                        color: Color(0xFF4CAF50), size: 20),
+                  ],
+                ),
+              ),
+            ),
+            // Liste des villes
+            if (_cities.isNotEmpty)
+              ...(_cities.map((city) => InkWell(
+                onTap: () => _selectCity(city),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_city, 
+                        color: const Color(0xFF4CAF50), size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          city.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (_selectedCity?.id == city.id)
+                        const Icon(Icons.check, 
+                          color: Color(0xFF4CAF50), size: 20),
+                    ],
+                  ),
+                ),
+              )).toList())
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: const Text(
+                  'Chargement des villes...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -540,12 +822,17 @@ class _OffersListScreenState extends State<OffersListScreen> {
                 ),
                 child: Column(
                   children: [
-                    const SizedBox(height: 16),
-                    // Filtres
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        children: [
+                    // Filtres (scrollable)
+                    Expanded(
+                      flex: 0,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 16),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Column(
+                                children: [
                           // Type d'offre et Localisation
                           Container(
                             padding: const EdgeInsets.all(16),
@@ -563,35 +850,46 @@ class _OffersListScreenState extends State<OffersListScreen> {
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.shopping_bag_outlined, 
-                                            color: const Color(0xFF4CAF50), size: 16),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            "Type d'offre",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _showPostTypes = !_showPostTypes;
+                                      });
+                                    },
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(Icons.shopping_bag_outlined, 
+                                              color: const Color(0xFF4CAF50), size: 16),
+                                            const SizedBox(width: 8),
+                                            const Text(
+                                              "Type d'offre",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                          const Spacer(),
-                                          const Icon(Icons.keyboard_arrow_down, 
-                                            color: Colors.grey, size: 16),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        _selectedOfferType,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
+                                            const Spacer(),
+                                            Icon(
+                                              _showPostTypes 
+                                                ? Icons.keyboard_arrow_up 
+                                                : Icons.keyboard_arrow_down, 
+                                              color: Colors.grey, size: 16
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          _selectedPostType?.name ?? "Type d'offre",
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 Container(
@@ -601,35 +899,46 @@ class _OffersListScreenState extends State<OffersListScreen> {
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.location_on_outlined, 
-                                            color: const Color(0xFF4CAF50), size: 16),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'Où',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _showCities = !_showCities;
+                                      });
+                                    },
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(Icons.location_on_outlined, 
+                                              color: const Color(0xFF4CAF50), size: 16),
+                                            const SizedBox(width: 8),
+                                            const Text(
+                                              'Où',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                          const Spacer(),
-                                          const Icon(Icons.keyboard_arrow_down, 
-                                            color: Colors.grey, size: 16),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        _selectedLocation,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
+                                            const Spacer(),
+                                            Icon(
+                                              _showCities 
+                                                ? Icons.keyboard_arrow_up 
+                                                : Icons.keyboard_arrow_down, 
+                                              color: Colors.grey, size: 16
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          _selectedCity?.name ?? "Où",
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
@@ -730,6 +1039,10 @@ class _OffersListScreenState extends State<OffersListScreen> {
                           ),
                           // Liste déroulante des catégories
                           if (_showCategories) _buildCategoryDropdown(),
+                          // Liste déroulante des types d'offres
+                          if (_showPostTypes) _buildPostTypeDropdown(),
+                          // Liste déroulante des villes
+                          if (_showCities) _buildCityDropdown(),
                           const SizedBox(height: 16),
                           // Nombre d'offres trouvées
                           Align(
@@ -742,7 +1055,11 @@ class _OffersListScreenState extends State<OffersListScreen> {
                               ),
                             ),
                           ),
-                        ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
