@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import '../services/user_service.dart';
-import '../models/category.dart';
-import '../services/category_service.dart';
 import '../models/post.dart';
+import '../models/category.dart';
+import '../models/post_type.dart';
+import '../models/city.dart';
 import '../services/post_service.dart';
+import '../services/category_service.dart';
+import '../services/post_type_service.dart';
+import '../services/city_service.dart';
+import '../services/user_service.dart';
 import 'offers_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,8 +19,19 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Category> _categories = [];
-  bool _showCategories = false;
+  List<PostType> _postTypes = [];
+  List<City> _cities = [];
   bool _isLoadingCategories = false;
+  bool _isLoadingPostTypes = false;
+  bool _isLoadingCities = false;
+  
+  // Variables pour les dropdowns
+  PostType? _selectedPostType;
+  City? _selectedCity;
+  Category? _selectedCategory;
+  bool _showPostTypes = false;
+  bool _showCities = false;
+  bool _showCategories = false;
   
   // Variables pour les offres
   List<Post> _posts = [];
@@ -29,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadCategories();
+    _loadPostTypes();
+    _loadCities();
     _loadPosts();
   }
 
@@ -50,6 +67,49 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoadingCategories = false;
       });
       print('Erreur lors du chargement des catégories: $e');
+    }
+  }
+
+  Future<void> _loadPostTypes() async {
+    try {
+      setState(() {
+        _isLoadingPostTypes = true;
+      });
+
+      final postTypes = await PostTypeService.getAllPostTypes();
+      final activePostTypes = PostTypeService.getActivePostTypes(postTypes);
+
+      setState(() {
+        _postTypes = activePostTypes;
+        _isLoadingPostTypes = false;
+      });
+    } catch (e) {
+      print('Erreur lors du chargement des types d\'offres: $e');
+      setState(() {
+        _isLoadingPostTypes = false;
+      });
+    }
+  }
+
+  Future<void> _loadCities() async {
+    try {
+      setState(() {
+        _isLoadingCities = true;
+      });
+
+      final cities = await CityService.getAllCities();
+      final activeCities = CityService.getActiveCities(cities);
+      activeCities.sort((a, b) => a.name.compareTo(b.name));
+
+      setState(() {
+        _cities = activeCities;
+        _isLoadingCities = false;
+      });
+    } catch (e) {
+      print('Erreur lors du chargement des villes: $e');
+      setState(() {
+        _isLoadingCities = false;
+      });
     }
   }
 
@@ -116,11 +176,225 @@ class _HomeScreenState extends State<HomeScreen> {
     print('Catégorie sélectionnée: ${category.name}');
   }
 
+  void _selectPostType(PostType? postType) {
+    setState(() {
+      _selectedPostType = postType;
+      _showPostTypes = false;
+    });
+  }
+
+  void _selectCity(City? city) {
+    setState(() {
+      _selectedCity = city;
+      _showCities = false;
+    });
+  }
+
   void _navigateToOffersList() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const OffersListScreen(),
+      MaterialPageRoute(builder: (context) => const OffersListScreen()),
+    );
+  }
+
+  Widget _buildPostTypeDropdown() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 250),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Option "Tous les types"
+              InkWell(
+                onTap: () => _selectPostType(null),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.shopping_bag_outlined, 
+                        color: const Color(0xFF4CAF50), size: 20),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Tous les types d\'offres',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (_selectedPostType == null)
+                        const Icon(Icons.check, 
+                          color: Color(0xFF4CAF50), size: 20),
+                    ],
+                  ),
+                ),
+              ),
+              // Liste des types d'offres
+              if (_postTypes.isNotEmpty)
+                ...(_postTypes.map((postType) => InkWell(
+                  onTap: () => _selectPostType(postType),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.work_outline, 
+                          color: const Color(0xFF4CAF50), size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            postType.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        if (_selectedPostType?.id == postType.id)
+                          const Icon(Icons.check, 
+                            color: Color(0xFF4CAF50), size: 20),
+                      ],
+                    ),
+                  ),
+                )).toList())
+              else
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: const Text(
+                    'Chargement des types d\'offres...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCityDropdown() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 350),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Option "Toutes les villes"
+              InkWell(
+                onTap: () => _selectCity(null),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, 
+                        color: const Color(0xFF4CAF50), size: 20),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Toutes les villes',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (_selectedCity == null)
+                        const Icon(Icons.check, 
+                          color: Color(0xFF4CAF50), size: 20),
+                    ],
+                  ),
+                ),
+              ),
+              // Liste des villes
+              if (_cities.isNotEmpty)
+                ...(_cities.map((city) => InkWell(
+                  onTap: () => _selectCity(city),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.location_city, 
+                          color: const Color(0xFF4CAF50), size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            city.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        if (_selectedCity?.id == city.id)
+                          const Icon(Icons.check, 
+                            color: Color(0xFF4CAF50), size: 20),
+                      ],
+                    ),
+                  ),
+                )).toList())
+              else
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: const Text(
+                    'Chargement des villes...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -454,35 +728,46 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Row(
                             children: [
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.shopping_bag_outlined, 
-                                          color: const Color(0xFF4CAF50), size: 20),
-                                        const SizedBox(width: 8),
-                                        const Text(
-                                          "Type d'offre",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _showPostTypes = !_showPostTypes;
+                                    });
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.shopping_bag_outlined, 
+                                            color: const Color(0xFF4CAF50), size: 20),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            "Type d'offre",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
                                           ),
-                                        ),
-                                        const Spacer(),
-                                        const Icon(Icons.keyboard_arrow_down, 
-                                          color: Colors.grey, size: 20),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    const Text(
-                                      "Appel d'offre",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                          const Spacer(),
+                                          Icon(
+                                            _showPostTypes 
+                                              ? Icons.keyboard_arrow_up 
+                                              : Icons.keyboard_arrow_down, 
+                                            color: Colors.grey, size: 20
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _selectedPostType?.name ?? "Type d'offre",
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               Container(
@@ -492,40 +777,54 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(width: 16),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.location_on_outlined, 
-                                          color: const Color(0xFF4CAF50), size: 20),
-                                        const SizedBox(width: 8),
-                                        const Text(
-                                          'Localisation',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _showCities = !_showCities;
+                                    });
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_on_outlined, 
+                                            color: const Color(0xFF4CAF50), size: 20),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Localisation',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
                                           ),
-                                        ),
-                                        const Spacer(),
-                                        const Icon(Icons.keyboard_arrow_down, 
-                                          color: Colors.grey, size: 20),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    const Text(
-                                      'Dakar, Sénégal',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                          const Spacer(),
+                                          Icon(
+                                            _showCities 
+                                              ? Icons.keyboard_arrow_up 
+                                              : Icons.keyboard_arrow_down, 
+                                            color: Colors.grey, size: 20
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _selectedCity?.name ?? 'Où',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        // Dropdowns
+                        if (_showPostTypes) _buildPostTypeDropdown(),
+                        if (_showCities) _buildCityDropdown(),
                         const SizedBox(height: 16),
                         // Catégories
                         Padding(
