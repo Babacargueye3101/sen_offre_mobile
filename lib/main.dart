@@ -6,8 +6,9 @@ import 'screens/entreprises_screen.dart';
 import 'screens/favoris_screen.dart';
 import 'screens/tarifs_screen.dart';
 import 'screens/profil_screen.dart';
+import 'services/user_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -15,6 +16,10 @@ void main() {
       statusBarIconBrightness: Brightness.light,
     ),
   );
+  
+  // Charger les données de l'utilisateur depuis SharedPreferences
+  await UserService.loadFromPreferences();
+  
   runApp(const MyApp());
 }
 

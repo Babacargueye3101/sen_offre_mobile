@@ -1,3 +1,5 @@
+import '../utils/url_helper.dart';
+
 class User {
   final int id;
   final String name;
@@ -32,9 +34,11 @@ class User {
       originalUpdatedAt: json['original_updated_at'] as String,
       originalLastActivity: json['original_last_activity'] as String?,
       createdAtFormatted: json['created_at_formatted'] as String,
-      photoUrl: json['photo_url'] as String,
+      photoUrl: UrlHelper.fixImageUrl(json['photo_url'] as String),
       pIsOnline: json['p_is_online'] as bool,
-      countryFlagUrl: json['country_flag_url'] as String?,
+      countryFlagUrl: json['country_flag_url'] != null 
+          ? UrlHelper.fixImageUrl(json['country_flag_url'] as String) 
+          : null,
     );
   }
 

@@ -1,7 +1,126 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
-class EntreprisesScreen extends StatelessWidget {
+import '../services/company_service.dart';
+import '../models/company.dart';
+
+class EntreprisesScreen extends StatefulWidget {
   const EntreprisesScreen({super.key});
+
+  @override
+  State<EntreprisesScreen> createState() => _EntreprisesScreenState();
+}
+
+class _EntreprisesScreenState extends State<EntreprisesScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  List<Company> _companies = [];
+  bool _isLoading = false;
+  String? _error;
+  int _total = 0;
+  Timer? _debounce;
+  int _currentPage = 1;
+  int _lastPage = 1;
+  bool _isLoadingMore = false;
+  String? _currentQuery;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCompanies(reset: true);
+    _searchController.addListener(() {
+      setState(() {}); // met à jour l'icône clear
+    });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchCompanies({String? query, bool reset = false}) async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final response = await CompanyService.getCompanies(
+        page: 1,
+        perPage: 20,
+        query: query,
+      );
+
+      setState(() {
+        _companies = response.result.data;
+        _total = response.result.meta?.total ?? _companies.length;
+        _currentPage = 1;
+        _lastPage = response.result.meta?.lastPage ?? 1;
+        _currentQuery = query;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  void _onSearchSubmit(String value) {
+    final q = value.trim();
+    _fetchCompanies(query: q.isEmpty ? null : q, reset: true);
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      final q = value.trim();
+      _fetchCompanies(query: q.isEmpty ? null : q, reset: true);
+    });
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore &&
+        !_isLoading &&
+        _currentPage < _lastPage) {
+      _loadMoreCompanies();
+    }
+  }
+
+  Future<void> _loadMoreCompanies() async {
+    if (_isLoadingMore || _currentPage >= _lastPage) return;
+    try {
+      setState(() {
+        _isLoadingMore = true;
+      });
+
+      final nextPage = _currentPage + 1;
+      final response = await CompanyService.getCompanies(
+        page: nextPage,
+        perPage: 20,
+        query: _currentQuery,
+      );
+
+      setState(() {
+        _companies.addAll(response.result.data);
+        _currentPage = nextPage;
+        _lastPage = response.result.meta?.lastPage ?? _lastPage;
+        _total = response.result.meta?.total ?? _total;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,19 +185,31 @@ class EntreprisesScreen extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.search, color: Colors.grey),
-                    SizedBox(width: 12),
+                    const Icon(Icons.search, color: Colors.grey),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        "Nom de l'entreprise",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: const InputDecoration(
+                          hintText: "Nom de l'entreprise",
+                          isCollapsed: true,
+                          border: InputBorder.none,
                         ),
+                        textInputAction: TextInputAction.search,
+                        onSubmitted: _onSearchSubmit,
+                        onChanged: _onSearchChanged,
                       ),
                     ),
+                    if (_searchController.text.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                          _onSearchSubmit('');
+                        },
+                        child: const Icon(Icons.close, color: Colors.grey),
+                      ),
                   ],
                 ),
               ),
@@ -94,53 +225,65 @@ class EntreprisesScreen extends StatelessWidget {
                     topRight: Radius.circular(24),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: Text(
-                        '161 entreprises trouvées',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        children: [
-                          _buildEntrepriseCard(
-                            name: 'ANIDA',
-                            description: "L'ANIDA est une agence dévélcution dotée d'une autonomie financière et placée sous la tutelle technique...",
-                            announcements: '06',
-                            logo: 'ANIDA',
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.error_outline, color: Colors.red),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _error!,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ElevatedButton(
+                                    onPressed: () => _fetchCompanies(query: _searchController.text.trim()),
+                                    child: const Text('Réessayer'),
+                                  )
+                                ],
+                              ),
+                            ),
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Text(
+                                  '$_total entreprises trouvées',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: ListView.builder(
+                                  controller: _scrollController,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  itemCount: _companies.length + 1 + (_isLoadingMore ? 1 : 0),
+                                  itemBuilder: (context, index) {
+                                    if (index < _companies.length) {
+                                      final c = _companies[index];
+                                      return _buildEntrepriseCard(c);
+                                    }
+                                    if (_isLoadingMore && index == _companies.length) {
+                                      return const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                                        child: Center(child: CircularProgressIndicator()),
+                                      );
+                                    }
+                                    return const SizedBox(height: 80);
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
-                          _buildEntrepriseCard(
-                            name: 'ASPT',
-                            description: 'ASPT (Agence Sénégalaise de Promotion Touristique)',
-                            announcements: '02',
-                            logo: 'ASPT',
-                          ),
-                          _buildEntrepriseCard(
-                            name: 'CETUD',
-                            description: 'Conseil Exécutif des Transports Urbains de Dakar',
-                            announcements: '01',
-                            logo: 'CETUD',
-                          ),
-                          _buildEntrepriseCard(
-                            name: 'ONAS',
-                            description: "Office National de l'Assainissement du Sénégal (ONAS) Organisme gouvernemental",
-                            announcements: '04',
-                            logo: 'ONAS',
-                          ),
-                          const SizedBox(height: 80),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ],
@@ -149,12 +292,12 @@ class EntreprisesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEntrepriseCard({
-    required String name,
-    required String description,
-    required String announcements,
-    required String logo,
-  }) {
+  Widget _buildEntrepriseCard(Company company) {
+    final initials = company.name.isNotEmpty
+        ? company.name.trim().split(RegExp(r'\s+')).take(2).map((w) => w.isNotEmpty ? w[0] : '').join().toUpperCase()
+        : '';
+    final announcements = company.postsCount.toString().padLeft(2, '0');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -178,16 +321,32 @@ class EntreprisesScreen extends StatelessWidget {
                   color: Colors.grey.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Center(
-                  child: Text(
-                    logo,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
+                clipBehavior: Clip.antiAlias,
+                child: (company.logoUrl?.small.isNotEmpty ?? false)
+                    ? Image.network(
+                        company.logoUrl!.small,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => Center(
+                          child: Text(
+                            initials,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Text(
+                          initials,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -195,7 +354,7 @@ class EntreprisesScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      company.name,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -203,7 +362,7 @@ class EntreprisesScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      description,
+                      company.description ?? '',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],

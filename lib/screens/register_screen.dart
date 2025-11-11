@@ -107,7 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             // Vérifier si l'inscription a réussi
             if (response.success) {
               // Sauvegarder les informations de l'utilisateur
-              UserService.setUserFromRegistration(response);
+              await UserService.setUserFromRegistration(response);
               
               print('Utilisateur inscrit: ${UserService.userName}');
               print('Token sauvegardé: ${UserService.authorizationHeader}');

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/user_service.dart';
+import 'onboarding_screen.dart';
 
 class ProfilScreen extends StatelessWidget {
   const ProfilScreen({super.key});
@@ -103,7 +105,44 @@ class ProfilScreen extends StatelessWidget {
                           icon: Icons.logout,
                           title: 'Déconnexion',
                           isDestructive: true,
-                          onTap: () {},
+                          onTap: () async {
+                            // Afficher une boîte de dialogue de confirmation
+                            final shouldLogout = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Déconnexion'),
+                                content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text('Annuler'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                    ),
+                                    child: const Text('Déconnecter'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (shouldLogout == true) {
+                              // Déconnecter l'utilisateur
+                              await UserService.logout();
+                              
+                              // Rediriger vers l'écran d'onboarding
+                              if (context.mounted) {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (context) => const OnboardingScreen(),
+                                  ),
+                                  (route) => false,
+                                );
+                              }
+                            }
+                          },
                         ),
                         const SizedBox(height: 80),
                       ],

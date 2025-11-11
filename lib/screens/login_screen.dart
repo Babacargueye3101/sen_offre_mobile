@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Vérifier si la connexion a réussi
           if (response.success) {
             // Sauvegarder les informations de l'utilisateur
-            UserService.setUserFromLogin(response);
+            await UserService.setUserFromLogin(response);
             
             print('Utilisateur connecté: ${UserService.userName}');
             print('Token sauvegardé: ${UserService.authorizationHeader}');

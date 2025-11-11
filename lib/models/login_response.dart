@@ -1,3 +1,5 @@
+import '../utils/url_helper.dart';
+
 class LoginResponse {
   final bool success;
   final String? message;
@@ -44,7 +46,7 @@ class LoginUser {
   final String? countryCode;
   final String? languageCode;
   final int userTypeId;
-  final int genderId;
+  final int? genderId;
   final String? photo;
   final String? about;
   final String authField;
@@ -65,12 +67,12 @@ class LoginUser {
   final int acceptTerms;
   final int acceptMarketingOffers;
   final int darkMode;
-  final String timeZone;
+  final String? timeZone;
   final int featured;
   final int blocked;
   final int closed;
   final String? lastActivity;
-  final String phoneIntl;
+  final String? phoneIntl;
 
   LoginUser({
     required this.id,
@@ -86,7 +88,7 @@ class LoginUser {
     this.countryCode,
     this.languageCode,
     required this.userTypeId,
-    required this.genderId,
+    this.genderId,
     this.photo,
     this.about,
     required this.authField,
@@ -107,12 +109,12 @@ class LoginUser {
     required this.acceptTerms,
     required this.acceptMarketingOffers,
     required this.darkMode,
-    required this.timeZone,
+    this.timeZone,
     required this.featured,
     required this.blocked,
     required this.closed,
     this.lastActivity,
-    required this.phoneIntl,
+    this.phoneIntl,
   });
 
   factory LoginUser.fromJson(Map<String, dynamic> json) {
@@ -124,13 +126,15 @@ class LoginUser {
       originalUpdatedAt: json['original_updated_at'] as String,
       originalLastActivity: json['original_last_activity'] as String?,
       createdAtFormatted: json['created_at_formatted'] as String,
-      photoUrl: json['photo_url'] as String,
+      photoUrl: UrlHelper.fixImageUrl(json['photo_url'] as String),
       pIsOnline: json['p_is_online'] as bool,
-      countryFlagUrl: json['country_flag_url'] as String?,
+      countryFlagUrl: json['country_flag_url'] != null 
+          ? UrlHelper.fixImageUrl(json['country_flag_url'] as String) 
+          : null,
       countryCode: json['country_code'] as String?,
       languageCode: json['language_code'] as String?,
       userTypeId: json['user_type_id'] as int,
-      genderId: json['gender_id'] as int,
+      genderId: json['gender_id'] as int?,
       photo: json['photo'] as String?,
       about: json['about'] as String?,
       authField: json['auth_field'] as String,
@@ -151,12 +155,12 @@ class LoginUser {
       acceptTerms: json['accept_terms'] as int,
       acceptMarketingOffers: json['accept_marketing_offers'] as int,
       darkMode: json['dark_mode'] as int,
-      timeZone: json['time_zone'] as String,
+      timeZone: json['time_zone'] as String?,
       featured: json['featured'] as int,
       blocked: json['blocked'] as int,
       closed: json['closed'] as int,
       lastActivity: json['last_activity'] as String?,
-      phoneIntl: json['phone_intl'] as String,
+      phoneIntl: json['phone_intl'] as String?,
     );
   }
 

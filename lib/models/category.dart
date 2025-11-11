@@ -1,3 +1,5 @@
+import '../utils/url_helper.dart';
+
 class Category {
   final int id;
   final int? parentId;
@@ -54,7 +56,9 @@ class Category {
       rgt: json['rgt'] is int ? json['rgt'] : int.tryParse(json['rgt'].toString()) ?? 0,
       depth: json['depth'] is int ? json['depth'] : int.tryParse(json['depth'].toString()) ?? 0,
       active: json['active'] is int ? json['active'] : int.tryParse(json['active'].toString()) ?? 0,
-      pictureUrl: json['picture_url']?.toString() ?? '',
+      pictureUrl: json['picture_url'] != null 
+          ? UrlHelper.fixImageUrl(json['picture_url'].toString()) 
+          : '',
       parentClosure: json['parentClosure'],
     );
   }
