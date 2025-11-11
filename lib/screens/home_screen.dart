@@ -8,6 +8,7 @@ import '../services/category_service.dart';
 import '../services/post_type_service.dart';
 import '../services/city_service.dart';
 import '../services/user_service.dart';
+import '../services/saved_posts_service.dart';
 import 'offers_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentPage = 1;
   final int _perPage = 10;
   bool _hasMorePosts = true;
+  Set<int> _favoritePostIds = {}; // Pour tracker les favoris
 
   @override
   void initState() {
@@ -195,6 +197,78 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(builder: (context) => const OffersListScreen()),
     );
+  }
+
+  /// Ajouter ou supprimer une offre des favoris
+  Future<void> _toggleFavorite(Post post) async {
+    // Vérifier si l'utilisateur est connecté
+    if (!UserService.isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vous devez être connecté pour ajouter aux favoris'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final bool isFavorite = _favoritePostIds.contains(post.id);
+    
+    try {
+      bool success;
+      if (isFavorite) {
+        // Supprimer des favoris
+        success = await SavedPostsService.removeFromFavorites(post.id);
+        if (success) {
+          setState(() {
+            _favoritePostIds.remove(post.id);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Offre supprimée des favoris'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        // Ajouter aux favoris
+        success = await SavedPostsService.addToFavorites(post.id);
+        if (success) {
+          setState(() {
+            _favoritePostIds.add(post.id);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ajouté aux favoris avec succès'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+      
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isFavorite 
+              ? 'Erreur lors de la suppression des favoris' 
+              : 'Erreur lors de l\'ajout aux favoris'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Erreur lors de la gestion des favoris: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Une erreur est survenue'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   Widget _buildPostTypeDropdown() {
@@ -557,7 +631,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.bookmark_border, color: Colors.grey),
+                IconButton(
+                  onPressed: () => _toggleFavorite(post),
+                  icon: Icon(
+                    _favoritePostIds.contains(post.id) 
+                      ? Icons.bookmark 
+                      : Icons.bookmark_border,
+                    color: _favoritePostIds.contains(post.id) 
+                      ? const Color(0xFF4CAF50) 
+                      : Colors.grey,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
               ],
             ),
             const SizedBox(height: 12),

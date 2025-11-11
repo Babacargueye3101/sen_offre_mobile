@@ -1,8 +1,19 @@
+import 'dart:io';
+
 class ApiConfig {
-  // URL de base de l'API
-  // Pour l'émulateur Android, utilisez 10.0.2.2 au lieu de localhost
-  // Pour un appareil physique, utilisez l'adresse IP de votre machine (ex: 192.168.1.x)
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  // URL de base de l'API - Configuration automatique selon la plateforme
+  static String get baseUrl {
+    if (Platform.isIOS) {
+      // Pour iOS (simulateur et appareil physique)
+      return 'http://localhost:8000/api';
+    } else if (Platform.isAndroid) {
+      // Pour l'émulateur Android
+      return 'http://10.0.2.2:8000/api';
+    } else {
+      // Fallback pour autres plateformes
+      return 'http://localhost:8000/api';
+    }
+  }
   
   // Endpoints
   static const String registerEndpoint = '/users';
