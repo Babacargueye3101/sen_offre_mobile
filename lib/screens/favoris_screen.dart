@@ -3,7 +3,9 @@ import '../models/saved_post.dart';
 import '../models/post.dart';
 import '../services/saved_posts_service.dart';
 import '../services/user_service.dart';
+import '../utils/url_helper.dart';
 import 'home_screen.dart';
+import 'post_detail_screen.dart';
 
 class FavorisScreen extends StatefulWidget {
   const FavorisScreen({super.key});
@@ -108,26 +110,21 @@ class _FavorisScreenState extends State<FavorisScreen> {
   }
 
   Widget _buildCompanyLogo(Post post) {
-    // Gestion des logos avec conversion HTTPS->HTTP pour localhost (même logique que offers_list_screen)
+    // Gestion des logos avec conversion HTTPS->HTTP pour localhost et 10.0.2.2 pour Android
     String logoUrl = '';
     
     // Priorité: small -> medium -> full
     if (post.logoUrl.small.isNotEmpty && post.logoUrl.small != 'app/default/picture.jpg') {
-      logoUrl = post.logoUrl.small;
+      logoUrl = UrlHelper.fixImageUrl(post.logoUrl.small);
     } else if (post.logoUrl.medium.isNotEmpty && post.logoUrl.medium != 'app/default/picture.jpg') {
-      logoUrl = post.logoUrl.medium;
+      logoUrl = UrlHelper.fixImageUrl(post.logoUrl.medium);
     } else if (post.logoUrl.full.isNotEmpty && post.logoUrl.full != 'app/default/picture.jpg') {
-      logoUrl = post.logoUrl.full;
-    }
-    
-    // Conversion HTTPS->HTTP pour localhost (même logique que offers_list_screen)
-    if (logoUrl.isNotEmpty && logoUrl.contains('https://localhost:8000')) {
-      logoUrl = logoUrl.replaceAll('https://localhost:8000', 'http://localhost:8000');
+      logoUrl = UrlHelper.fixImageUrl(post.logoUrl.full);
     }
     
     // Si pas de logo_url, essayer le champ logo direct
     if (logoUrl.isEmpty && post.logo.isNotEmpty) {
-      logoUrl = 'http://localhost:8000/storage/${post.logo}';
+      logoUrl = UrlHelper.fixImageUrl('http://localhost:8000/storage/${post.logo}');
     }
 
     if (logoUrl.isNotEmpty) {
@@ -187,22 +184,30 @@ class _FavorisScreenState extends State<FavorisScreen> {
 
   Widget _buildOfferCard(SavedPost savedPost) {
     final Post post = savedPost.post;
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PostDetailScreen(post: post),
           ),
-        ],
-      ),
-      child: Column(
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -350,6 +355,7 @@ class _FavorisScreenState extends State<FavorisScreen> {
             ],
           ),
         ],
+        ),
       ),
     );
   }

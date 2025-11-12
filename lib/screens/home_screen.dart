@@ -9,7 +9,9 @@ import '../services/post_type_service.dart';
 import '../services/city_service.dart';
 import '../services/user_service.dart';
 import '../services/saved_posts_service.dart';
+import '../utils/url_helper.dart';
 import 'offers_list_screen.dart';
+import 'post_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -474,26 +476,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCompanyLogo(Post post) {
-    // Gestion des logos avec conversion HTTPS->HTTP pour localhost (comme dans React)
+    // Gestion des logos avec conversion HTTPS->HTTP pour localhost et 10.0.2.2 pour Android
     String logoUrl = '';
     
-    // Priorité: small -> medium -> full (comme dans React)
+    // Priorité: small -> medium -> full
     if (post.logoUrl.small.isNotEmpty && post.logoUrl.small != 'app/default/picture.jpg') {
-      logoUrl = post.logoUrl.small;
+      logoUrl = UrlHelper.fixImageUrl(post.logoUrl.small);
     } else if (post.logoUrl.medium.isNotEmpty && post.logoUrl.medium != 'app/default/picture.jpg') {
-      logoUrl = post.logoUrl.medium;
+      logoUrl = UrlHelper.fixImageUrl(post.logoUrl.medium);
     } else if (post.logoUrl.full.isNotEmpty && post.logoUrl.full != 'app/default/picture.jpg') {
-      logoUrl = post.logoUrl.full;
+      logoUrl = UrlHelper.fixImageUrl(post.logoUrl.full);
     }
     
-    // Conversion HTTPS->HTTP pour localhost (comme dans React)
-    if (logoUrl.isNotEmpty && logoUrl.contains('https://localhost:8000')) {
-      logoUrl = logoUrl.replaceAll('https://localhost:8000', 'http://localhost:8000');
-    }
-    
-    // Si pas de logo_url, essayer le champ logo direct (comme dans React)
+    // Si pas de logo_url, essayer le champ logo direct
     if (logoUrl.isEmpty && post.logo.isNotEmpty) {
-      logoUrl = 'http://localhost:8000/storage/${post.logo}';
+      logoUrl = UrlHelper.fixImageUrl('http://localhost:8000/storage/${post.logo}');
     }
 
     if (logoUrl.isNotEmpty) {
@@ -571,17 +568,26 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPostCard(Post post) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.grey.withOpacity(0.2),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PostDetailScreen(post: post),
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.grey.withOpacity(0.2),
+            ),
           ),
-        ),
-        child: Column(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -726,6 +732,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

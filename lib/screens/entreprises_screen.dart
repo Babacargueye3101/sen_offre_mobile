@@ -44,6 +44,7 @@ class _EntreprisesScreenState extends State<EntreprisesScreen> {
 
   Future<void> _fetchCompanies({String? query, bool reset = false}) async {
     try {
+      if (!mounted) return;
       setState(() {
         _isLoading = true;
         _error = null;
@@ -55,6 +56,7 @@ class _EntreprisesScreenState extends State<EntreprisesScreen> {
         query: query,
       );
 
+      if (!mounted) return;
       setState(() {
         _companies = response.result.data;
         _total = response.result.meta?.total ?? _companies.length;
@@ -64,6 +66,7 @@ class _EntreprisesScreenState extends State<EntreprisesScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _error = e.toString();
@@ -97,6 +100,7 @@ class _EntreprisesScreenState extends State<EntreprisesScreen> {
   Future<void> _loadMoreCompanies() async {
     if (_isLoadingMore || _currentPage >= _lastPage) return;
     try {
+      if (!mounted) return;
       setState(() {
         _isLoadingMore = true;
       });
@@ -108,6 +112,7 @@ class _EntreprisesScreenState extends State<EntreprisesScreen> {
         query: _currentQuery,
       );
 
+      if (!mounted) return;
       setState(() {
         _companies.addAll(response.result.data);
         _currentPage = nextPage;
@@ -116,6 +121,7 @@ class _EntreprisesScreenState extends State<EntreprisesScreen> {
         _isLoadingMore = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoadingMore = false;
       });
