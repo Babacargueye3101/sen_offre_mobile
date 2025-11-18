@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'payment_screen.dart';
-import 'home_screen.dart';
 
 class TarifsScreen extends StatefulWidget {
   const TarifsScreen({super.key});
@@ -67,38 +66,19 @@ class _TarifsScreenState extends State<TarifsScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // Header avec bouton retour
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const HomeScreen()),
-                      ),
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+              // Header
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: Text(
+                    'Abonnement',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
-                    const Expanded(
-                      child: Text(
-                        'Abonnement',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 48,
-                    ), // Pour équilibrer le bouton retour
-                  ],
+                  ),
                 ),
               ),
               // Content
