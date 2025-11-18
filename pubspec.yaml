@@ -38,6 +38,7 @@ dependencies:
   url_launcher: ^6.2.5
   file_picker: ^8.0.0+1
   timeago: ^3.6.1
+  http: ^1.1.0
 
 dev_dependencies:
   flutter_test:
