@@ -4,7 +4,7 @@ import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/entreprises_screen.dart';
 import 'screens/favoris_screen.dart';
-import 'screens/tarifs_screen.dart';
+import 'screens/messages_screen.dart';
 import 'screens/profil_screen.dart';
 import 'services/user_service.dart';
 
@@ -60,7 +60,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     HomeScreen(),
     EntreprisesScreen(),
     FavorisScreen(),
-    TarifsScreen(),
+    MessagesScreen(),
     ProfilScreen(),
   ];
 
@@ -146,8 +146,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
                 label: 'Favoris',
               ),
               BottomNavigationBarItem(
-                icon: _buildNavIcon(Icons.shopping_cart_outlined, Icons.shopping_cart, 3),
-                label: 'Tarifs',
+                icon: _buildNavIcon(Icons.chat_bubble_outline, Icons.chat_bubble, 3),
+                label: 'Messages',
               ),
               BottomNavigationBarItem(
                 icon: _buildNavIcon(Icons.person_outline, Icons.person, 4),

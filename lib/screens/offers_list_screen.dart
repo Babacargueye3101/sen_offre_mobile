@@ -67,6 +67,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
     try {
       final categories = await CategoryService.getAllCategories();
       final activeCategories = CategoryService.getActiveCategories(categories);
+      if (!mounted) return;
       setState(() {
         _categories = activeCategories;
       });
@@ -88,6 +89,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
       final activePostTypes = PostTypeService.getActivePostTypes(postTypes);
       print('✅ Types d\'offres actifs: ${activePostTypes.length}');
       
+      if (!mounted) return;
       setState(() {
         _postTypes = activePostTypes;
       });
@@ -116,6 +118,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
       // Trier par nom alphabétique pour un meilleur affichage
       activeCities.sort((a, b) => a.name.compareTo(b.name));
       
+      if (!mounted) return;
       setState(() {
         _cities = activeCities;
       });
@@ -129,6 +132,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
   Future<void> _loadPosts({bool refresh = false}) async {
     if (_isLoading) return;
     
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       if (refresh) {
@@ -145,6 +149,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
       );
 
       print('Réponse reçue: ${response.result.data.length} offres');
+      if (!mounted) return;
       setState(() {
         if (_currentPage == 1) {
           _posts = response.result.data;
@@ -156,10 +161,11 @@ class _OffersListScreenState extends State<OffersListScreen> {
       });
       print('Total offres après chargement: ${_posts.length}');
     } catch (e) {
+      print('Erreur lors du chargement des offres: $e');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
-      print('Erreur lors du chargement des offres: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -814,7 +820,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
       if (isFavorite) {
         // Supprimer des favoris
         success = await SavedPostsService.removeFromFavorites(post.id);
-        if (success) {
+        if (success && mounted) {
           setState(() {
             _favoritePostIds.remove(post.id);
           });
@@ -829,7 +835,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
       } else {
         // Ajouter aux favoris
         success = await SavedPostsService.addToFavorites(post.id);
-        if (success) {
+        if (success && mounted) {
           setState(() {
             _favoritePostIds.add(post.id);
           });

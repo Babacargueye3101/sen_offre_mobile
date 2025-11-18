@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/login_response.dart';
 import '../models/registration_response.dart';
+import '../config/api_config.dart';
 
 class UserService {
   static LoginUser? _currentUser;
@@ -275,6 +277,124 @@ class UserService {
     } catch (e) {
       print('Error loading from preferences: $e');
       return false;
+    }
+  }
+
+  /// Obtenir l'ID de l'utilisateur connecté
+  static int get userId => _currentUser?.id ?? 0;
+
+  /// Obtenir le téléphone de l'utilisateur
+  static String get userPhone => _currentUser?.phone ?? '';
+
+  /// Mettre à jour le profil de l'utilisateur
+  static Future<Map<String, dynamic>> updateProfile({
+    required String name,
+    required String email,
+    String? phone,
+    String? phoneCountry,
+  }) async {
+    try {
+      if (!isLoggedIn) {
+        throw Exception('Utilisateur non connecté');
+      }
+
+      final client = HttpClient();
+      client.badCertificateCallback = (cert, host, port) => true;
+
+      final uri = Uri.parse('${ApiConfig.getBaseUrl()}/users/$userId');
+      final httpRequest = await client.openUrl('PUT', uri);
+
+      // Ajouter les headers
+      httpRequest.headers.set('Content-Type', 'application/json');
+      httpRequest.headers.set('Accept', 'application/json');
+      
+      final authHeader = authorizationHeader;
+      if (authHeader != null) {
+        httpRequest.headers.set('Authorization', authHeader);
+      }
+
+      // Préparer les données
+      final data = {
+        'name': name,
+        'email': email,
+        if (phone != null && phone.isNotEmpty) ...{
+          'phone': phone,
+          'phone_country': phoneCountry ?? 'SN', // Par défaut Sénégal
+        },
+      };
+
+      // Envoyer les données
+      httpRequest.write(json.encode(data));
+
+      final httpResponse = await httpRequest.close();
+      final responseBody = await httpResponse.transform(utf8.decoder).join();
+
+      print('Update Profile Response Status: ${httpResponse.statusCode}');
+      print('Update Profile Response: $responseBody');
+
+      if (httpResponse.statusCode == 200) {
+        final jsonResponse = json.decode(responseBody);
+        
+        // Mettre à jour les données locales si la réponse contient les nouvelles données
+        if (jsonResponse['success'] == true && jsonResponse['result'] != null) {
+          final updatedUser = jsonResponse['result'];
+          
+          // Mettre à jour l'utilisateur local
+          if (_currentUser != null) {
+            _currentUser = LoginUser(
+              id: _currentUser!.id,
+              name: updatedUser['name'] ?? _currentUser!.name,
+              username: _currentUser!.username,
+              updatedAt: _currentUser!.updatedAt,
+              originalUpdatedAt: _currentUser!.originalUpdatedAt,
+              originalLastActivity: _currentUser!.originalLastActivity,
+              createdAtFormatted: _currentUser!.createdAtFormatted,
+              photoUrl: _currentUser!.photoUrl,
+              pIsOnline: _currentUser!.pIsOnline,
+              countryFlagUrl: _currentUser!.countryFlagUrl,
+              countryCode: _currentUser!.countryCode,
+              languageCode: _currentUser!.languageCode,
+              userTypeId: _currentUser!.userTypeId,
+              genderId: _currentUser!.genderId,
+              photo: _currentUser!.photo,
+              about: _currentUser!.about,
+              authField: _currentUser!.authField,
+              email: updatedUser['email'] ?? _currentUser!.email,
+              phone: updatedUser['phone'] ?? _currentUser!.phone,
+              phoneNational: _currentUser!.phoneNational,
+              phoneCountry: _currentUser!.phoneCountry,
+              phoneHidden: _currentUser!.phoneHidden,
+              disableComments: _currentUser!.disableComments,
+              createFromIp: _currentUser!.createFromIp,
+              latestUpdateIp: _currentUser!.latestUpdateIp,
+              provider: _currentUser!.provider,
+              providerId: _currentUser!.providerId,
+              emailVerifiedAt: _currentUser!.emailVerifiedAt,
+              phoneVerifiedAt: _currentUser!.phoneVerifiedAt,
+              acceptTerms: _currentUser!.acceptTerms,
+              acceptMarketingOffers: _currentUser!.acceptMarketingOffers,
+              darkMode: _currentUser!.darkMode,
+              timeZone: _currentUser!.timeZone,
+              featured: _currentUser!.featured,
+              blocked: _currentUser!.blocked,
+              closed: _currentUser!.closed,
+              lastActivity: _currentUser!.lastActivity,
+              phoneIntl: _currentUser!.phoneIntl,
+            );
+            
+            // Sauvegarder dans SharedPreferences
+            await _saveToPreferences();
+          }
+        }
+        
+        return jsonResponse;
+      } else {
+        final jsonResponse = json.decode(responseBody);
+        throw Exception(jsonResponse['message'] ?? 'Erreur lors de la mise à jour du profil');
+      }
+    } catch (e) {
+      print('Erreur updateProfile: $e');
+      rethrow;
     }
   }
 }

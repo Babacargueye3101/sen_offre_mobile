@@ -5,6 +5,8 @@ import '../services/thread_service.dart';
 import '../utils/url_helper.dart';
 import 'onboarding_screen.dart';
 import 'post_detail_screen.dart';
+import 'edit_profile_screen.dart';
+import 'faq_screen.dart';
 
 class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
@@ -194,7 +196,19 @@ class _ProfilScreenState extends State<ProfilScreen> with SingleTickerProviderSt
             _buildMenuItem(
               icon: Icons.person_outline,
               title: 'Modifier Profil',
-              onTap: () {},
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EditProfileScreen(),
+                  ),
+                );
+                
+                // Si le profil a été mis à jour, rafraîchir l'affichage
+                if (result == true) {
+                  setState(() {});
+                }
+              },
             ),
             _buildMenuItem(
               icon: Icons.lock_outline,
@@ -230,7 +244,14 @@ class _ProfilScreenState extends State<ProfilScreen> with SingleTickerProviderSt
             _buildMenuItem(
               icon: Icons.help_outline,
               title: 'FAQ & Support',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FaqScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 24),
             _buildMenuItem(

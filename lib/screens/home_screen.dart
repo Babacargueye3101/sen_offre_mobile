@@ -53,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadCategories() async {
     try {
+      if (!mounted) return;
       setState(() {
         _isLoadingCategories = true;
       });
@@ -60,20 +61,23 @@ class _HomeScreenState extends State<HomeScreen> {
       final categories = await CategoryService.getAllCategories();
       final activeCategories = CategoryService.getActiveCategories(categories);
 
+      if (!mounted) return;
       setState(() {
         _categories = activeCategories;
         _isLoadingCategories = false;
       });
     } catch (e) {
+      print('Erreur lors du chargement des catégories: $e');
+      if (!mounted) return;
       setState(() {
         _isLoadingCategories = false;
       });
-      print('Erreur lors du chargement des catégories: $e');
     }
   }
 
   Future<void> _loadPostTypes() async {
     try {
+      if (!mounted) return;
       setState(() {
         _isLoadingPostTypes = true;
       });
@@ -81,12 +85,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final postTypes = await PostTypeService.getAllPostTypes();
       final activePostTypes = PostTypeService.getActivePostTypes(postTypes);
 
+      if (!mounted) return;
       setState(() {
         _postTypes = activePostTypes;
         _isLoadingPostTypes = false;
       });
     } catch (e) {
       print('Erreur lors du chargement des types d\'offres: $e');
+      if (!mounted) return;
       setState(() {
         _isLoadingPostTypes = false;
       });
@@ -95,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadCities() async {
     try {
+      if (!mounted) return;
       setState(() {
         _isLoadingCities = true;
       });
@@ -103,12 +110,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final activeCities = CityService.getActiveCities(cities);
       activeCities.sort((a, b) => a.name.compareTo(b.name));
 
+      if (!mounted) return;
       setState(() {
         _cities = activeCities;
         _isLoadingCities = false;
       });
     } catch (e) {
       print('Erreur lors du chargement des villes: $e');
+      if (!mounted) return;
       setState(() {
         _isLoadingCities = false;
       });
@@ -119,10 +128,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_isLoadingPosts) return;
     
     try {
+      if (!mounted) return;
       setState(() {
         _isLoadingPosts = true;
         // Réinitialiser à la page 1 lors d'un changement de filtre
         _currentPage = 1;
+        _posts = [];
       });
 
       final response = await PostService.getPosts(
@@ -133,16 +144,18 @@ class _HomeScreenState extends State<HomeScreen> {
         categoryId: _selectedCategory?.id,
       );
 
+      if (!mounted) return;
       setState(() {
         _posts = response.result.data;
         _hasMorePosts = response.result.links.next != null;
         _isLoadingPosts = false;
       });
     } catch (e) {
+      print('Erreur lors du chargement des offres: $e');
+      if (!mounted) return;
       setState(() {
         _isLoadingPosts = false;
       });
-      print('Erreur lors du chargement des offres: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -220,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (isFavorite) {
         // Supprimer des favoris
         success = await SavedPostsService.removeFromFavorites(post.id);
-        if (success) {
+        if (success && mounted) {
           setState(() {
             _favoritePostIds.remove(post.id);
           });
@@ -235,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         // Ajouter aux favoris
         success = await SavedPostsService.addToFavorites(post.id);
-        if (success) {
+        if (success && mounted) {
           setState(() {
             _favoritePostIds.add(post.id);
           });
