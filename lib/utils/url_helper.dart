@@ -1,17 +1,30 @@
+import 'dart:io';
+
 class UrlHelper {
-  /// Convertit les URLs localhost en URLs accessibles depuis l'émulateur Android
+  /// Convertit les URLs localhost en URLs accessibles selon la plateforme
   /// Pour l'émulateur Android: localhost -> 10.0.2.2
-  /// Pour un appareil physique, vous devrez utiliser l'IP de votre machine
+  /// Pour iOS: garde localhost (fonctionne sur simulateur)
   static String fixImageUrl(String url) {
     if (url.isEmpty) return url;
     
-    // Remplacer localhost par 10.0.2.2 pour l'émulateur Android
-    String fixedUrl = url.replaceAll('localhost', '10.0.2.2');
+    String fixedUrl = url;
     
-    // Remplacer https par http pour le développement local
-    // (évite les problèmes de certificat SSL)
-    if (fixedUrl.contains('10.0.2.2')) {
-      fixedUrl = fixedUrl.replaceAll('https://', 'http://');
+    // Forcer HTTP pour le développement local (éviter les problèmes SSL)
+    fixedUrl = url.replaceAll('https://', 'http://');
+    
+    // Détection automatique de la plateforme
+    if (fixedUrl.contains('localhost')) {
+      try {
+        // Pour l'émulateur Android: convertir localhost en 10.0.2.2
+        if (Platform.isAndroid) {
+          fixedUrl = fixedUrl.replaceAll('localhost', '10.0.2.2');
+        }
+        // Pour iOS simulateur: garder localhost tel quel
+        // (localhost fonctionne directement sur iOS simulateur)
+      } catch (e) {
+        // Si Platform n'est pas disponible, garder l'URL originale
+        fixedUrl = fixedUrl;
+      }
     }
     
     return fixedUrl;
