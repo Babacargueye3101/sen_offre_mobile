@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'payment_screen.dart';
+import 'home_screen.dart';
 
 class TarifsScreen extends StatefulWidget {
   const TarifsScreen({super.key});
@@ -72,7 +73,10 @@ class _TarifsScreenState extends State<TarifsScreen>
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HomeScreen()),
+                      ),
                       icon: const Icon(
                         Icons.arrow_back,
                         color: Colors.white,
