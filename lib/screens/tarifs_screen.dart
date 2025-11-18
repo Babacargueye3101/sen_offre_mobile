@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'payment_screen.dart';
 
 class TarifsScreen extends StatefulWidget {
   const TarifsScreen({super.key});
@@ -204,7 +205,25 @@ class _TarifsScreenState extends State<TarifsScreen> with TickerProviderStateMix
                             ],
                           ),
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              // Déterminer le plan sélectionné
+                              final planTitle = isAnnualSelected ? 'Offre Annuelle' : 'Offre Mensuelle';
+                              final price = isAnnualSelected ? '20,000' : '3,000';
+                              final period = isAnnualSelected ? '/année' : '/mois';
+                              
+                              // Naviguer vers l'écran de paiement
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PaymentScreen(
+                                    isAnnual: isAnnualSelected,
+                                    planTitle: planTitle,
+                                    price: price,
+                                    period: period,
+                                  ),
+                                ),
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: const Color(0xFF4CAF50),
