@@ -7,18 +7,31 @@ import 'user_service.dart';
 class PostService {
   static const String _postsEndpoint = '/posts';
 
-  /// Récupérer les offres avec pagination
+  /// Récupérer les offres avec pagination et filtres
   static Future<PostResponse> getPosts({
     int page = 1,
     int perPage = 10,
+    int? cityId,
+    int? postTypeId,
+    int? categoryId,
   }) async {
     try {
       final client = HttpClient();
       // Désactiver la vérification SSL pour le développement local
       client.badCertificateCallback = (cert, host, port) => true;
       
-      // Construire l'URL avec les paramètres de pagination
-      final uri = Uri.parse('${ApiConfig.getBaseUrl()}$_postsEndpoint?page=$page&perPage=$perPage');
+      // Construire l'URL avec les paramètres de pagination et filtres
+      final queryParams = {
+        'page': page.toString(),
+        'perPage': perPage.toString(),
+        if (cityId != null) 'city_id': cityId.toString(),
+        if (postTypeId != null) 'post_type_id': postTypeId.toString(),
+        if (categoryId != null) 'category_id': categoryId.toString(),
+      };
+      
+      final uri = Uri.parse('${ApiConfig.getBaseUrl()}$_postsEndpoint').replace(
+        queryParameters: queryParams,
+      );
       final httpRequest = await client.getUrl(uri);
       
       // Ajouter les headers par défaut

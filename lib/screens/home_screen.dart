@@ -28,12 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingPostTypes = false;
   bool _isLoadingCities = false;
   
-  // Variables pour les dropdowns
+  // Variables pour les filtres
   PostType? _selectedPostType;
   City? _selectedCity;
   Category? _selectedCategory;
-  bool _showPostTypes = false;
-  bool _showCities = false;
   bool _showCategories = false;
   
   // Variables pour les offres
@@ -123,19 +121,20 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       setState(() {
         _isLoadingPosts = true;
+        // Réinitialiser à la page 1 lors d'un changement de filtre
+        _currentPage = 1;
       });
 
       final response = await PostService.getPosts(
         page: _currentPage,
         perPage: _perPage,
+        cityId: _selectedCity?.id,
+        postTypeId: _selectedPostType?.id,
+        categoryId: _selectedCategory?.id,
       );
 
       setState(() {
-        if (_currentPage == 1) {
-          _posts = response.result.data;
-        } else {
-          _posts.addAll(response.result.data);
-        }
+        _posts = response.result.data;
         _hasMorePosts = response.result.links.next != null;
         _isLoadingPosts = false;
       });
@@ -183,15 +182,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void _selectPostType(PostType? postType) {
     setState(() {
       _selectedPostType = postType;
-      _showPostTypes = false;
     });
+    _loadPosts();
   }
 
   void _selectCity(City? city) {
     setState(() {
       _selectedCity = city;
-      _showCities = false;
     });
+    _loadPosts();
   }
 
   void _navigateToOffersList() {
@@ -273,207 +272,506 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildPostTypeDropdown() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
+  // Nouveau design moderne pour les filtres
+  Widget _buildModernFilters() {
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          // Type d'offre
+          Expanded(
+            child: _buildFilterChip(
+              icon: Icons.work_outline,
+              label: 'Type',
+              value: _selectedPostType?.name ?? 'Tous',
+              onTap: () => _showPostTypeBottomSheet(),
+              isSelected: _selectedPostType != null,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Localisation
+          Expanded(
+            child: _buildFilterChip(
+              icon: Icons.location_on_outlined,
+              label: 'Ville',
+              value: _selectedCity?.name ?? 'Toutes',
+              onTap: () => _showCityBottomSheet(),
+              isSelected: _selectedCity != null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+    required bool isSelected,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        constraints: const BoxConstraints(maxHeight: 250),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected 
+                ? const Color(0xFF4CAF50) 
+                : Colors.grey.withOpacity(0.2),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withOpacity(0.1),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.05),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected 
+                      ? const Color(0xFF4CAF50) 
+                      : Colors.grey[600],
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.grey[400],
+                  size: 18,
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected 
+                    ? const Color(0xFF4CAF50) 
+                    : Colors.black87,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Option "Tous les types"
-              InkWell(
-                onTap: () => _selectPostType(null),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.shopping_bag_outlined, 
-                        color: const Color(0xFF4CAF50), size: 20),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Tous les types d\'offres',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      if (_selectedPostType == null)
-                        const Icon(Icons.check, 
-                          color: Color(0xFF4CAF50), size: 20),
-                    ],
-                  ),
-                ),
-              ),
-              // Liste des types d'offres
-              if (_postTypes.isNotEmpty)
-                ...(_postTypes.map((postType) => InkWell(
-                  onTap: () => _selectPostType(postType),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.work_outline, 
-                          color: const Color(0xFF4CAF50), size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            postType.name,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        if (_selectedPostType?.id == postType.id)
-                          const Icon(Icons.check, 
-                            color: Color(0xFF4CAF50), size: 20),
-                      ],
-                    ),
-                  ),
-                )).toList())
-              else
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  child: const Text(
-                    'Chargement des types d\'offres...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-            ],
-          ),
         ),
       ),
     );
   }
 
-  Widget _buildCityDropdown() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        constraints: const BoxConstraints(maxHeight: 350),
-        decoration: BoxDecoration(
+  void _showPostTypeBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Option "Toutes les villes"
-              InkWell(
-                onTap: () => _selectCity(null),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Type d\'offre',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.location_on_outlined, 
-                        color: const Color(0xFF4CAF50), size: 20),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Toutes les villes',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.grey[100],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Option "Tous les types"
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                _selectPostType(null);
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _selectedPostType == null 
+                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedPostType == null 
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey[300]!,
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.apps,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Tous les types',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (_selectedCity == null)
-                        const Icon(Icons.check, 
-                          color: Color(0xFF4CAF50), size: 20),
-                    ],
-                  ),
+                    ),
+                    if (_selectedPostType == null)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                  ],
                 ),
               ),
-              // Liste des villes
-              if (_cities.isNotEmpty)
-                ...(_cities.map((city) => InkWell(
-                  onTap: () => _selectCity(city),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+            ),
+            const Divider(height: 24),
+            // Liste des types
+            Expanded(
+              child: _isLoadingPostTypes
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.location_city, 
-                          color: const Color(0xFF4CAF50), size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
+                    )
+                  : _postTypes.isEmpty
+                      ? const Center(
                           child: Text(
-                            city.name,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            'Aucun type disponible',
+                            style: TextStyle(color: Colors.grey),
                           ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _postTypes.length,
+                          itemBuilder: (context, index) {
+                            final postType = _postTypes[index];
+                            final isSelected = _selectedPostType?.id == postType.id;
+                            
+                            return InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                _selectPostType(postType);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isSelected 
+                                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected 
+                                        ? const Color(0xFF4CAF50)
+                                        : Colors.grey[200]!,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.work_outline,
+                                        color: Color(0xFF4CAF50),
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        postType.name,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Color(0xFF4CAF50),
+                                        size: 24,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                        if (_selectedCity?.id == city.id)
-                          const Icon(Icons.check, 
-                            color: Color(0xFF4CAF50), size: 20),
-                      ],
-                    ),
-                  ),
-                )).toList())
-              else
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  child: const Text(
-                    'Chargement des villes...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  void _showCityBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Localisation',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.grey[100],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Option "Toutes les villes"
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                _selectCity(null);
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _selectedCity == null 
+                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedCity == null 
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey[300]!,
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.public,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Toutes les villes',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (_selectedCity == null)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(height: 24),
+            // Liste des villes
+            Expanded(
+              child: _isLoadingCities
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+                      ),
+                    )
+                  : _cities.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Aucune ville disponible',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _cities.length,
+                          itemBuilder: (context, index) {
+                            final city = _cities[index];
+                            final isSelected = _selectedCity?.id == city.id;
+                            
+                            return InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                _selectCity(city);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isSelected 
+                                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected 
+                                        ? const Color(0xFF4CAF50)
+                                        : Colors.grey[200]!,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.location_city,
+                                        color: Color(0xFF4CAF50),
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        city.name,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Color(0xFF4CAF50),
+                                        size: 24,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildCompanyLogo(Post post) {
     // Gestion des logos avec conversion HTTPS->HTTP pour localhost et 10.0.2.2 pour Android
@@ -802,122 +1100,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 16),
-                        // Type d'offre et Localisation
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.1),
-                                spreadRadius: 1,
-                                blurRadius: 10,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _showPostTypes = !_showPostTypes;
-                                    });
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.shopping_bag_outlined, 
-                                            color: const Color(0xFF4CAF50), size: 20),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            "Type d'offre",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          Icon(
-                                            _showPostTypes 
-                                              ? Icons.keyboard_arrow_up 
-                                              : Icons.keyboard_arrow_down, 
-                                            color: Colors.grey, size: 20
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        _selectedPostType?.name ?? "Type d'offre",
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                width: 1,
-                                height: 40,
-                                color: Colors.grey.withOpacity(0.3),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _showCities = !_showCities;
-                                    });
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.location_on_outlined, 
-                                            color: const Color(0xFF4CAF50), size: 20),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'Localisation',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          Icon(
-                                            _showCities 
-                                              ? Icons.keyboard_arrow_up 
-                                              : Icons.keyboard_arrow_down, 
-                                            color: Colors.grey, size: 20
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        _selectedCity?.name ?? 'Où',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Dropdowns
-                        if (_showPostTypes) _buildPostTypeDropdown(),
-                        if (_showCities) _buildCityDropdown(),
+                        const SizedBox(height: 20),
+                        // Section des filtres modernes
+                        _buildModernFilters(),
                         const SizedBox(height: 16),
                         // Catégories
                         Padding(
