@@ -7,6 +7,7 @@ import 'onboarding_screen.dart';
 import 'post_detail_screen.dart';
 import 'edit_profile_screen.dart';
 import 'faq_screen.dart';
+import 'change_password_screen.dart';
 
 class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
@@ -250,7 +251,14 @@ class _ProfilScreenState extends State<ProfilScreen> with SingleTickerProviderSt
             _buildMenuItem(
               icon: Icons.lock_outline,
               title: 'Changer Mot de passe',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ChangePasswordScreen(),
+                  ),
+                );
+              },
             ),
             _buildMenuItem(
               icon: Icons.notifications_outlined,

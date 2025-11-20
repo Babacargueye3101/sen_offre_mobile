@@ -519,4 +519,67 @@ class UserService {
       rethrow;
     }
   }
+
+  /// Changer le mot de passe de l'utilisateur
+  static Future<Map<String, dynamic>> changePassword({
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      if (!isLoggedIn) {
+        throw Exception('Utilisateur non connecté');
+      }
+
+      if (newPassword != confirmPassword) {
+        throw Exception('Les mots de passe ne correspondent pas');
+      }
+
+      if (newPassword.length < 6) {
+        throw Exception('Le mot de passe doit contenir au moins 6 caractères');
+      }
+
+      final client = HttpClient();
+      client.badCertificateCallback = (cert, host, port) => true;
+
+      final uri = Uri.parse('${ApiConfig.getBaseUrl()}/users/$userId');
+      final httpRequest = await client.openUrl('PUT', uri);
+
+      // Ajouter les headers
+      httpRequest.headers.set('Content-Type', 'application/json');
+      httpRequest.headers.set('Accept', 'application/json');
+      
+      final authHeader = authorizationHeader;
+      if (authHeader != null) {
+        httpRequest.headers.set('Authorization', authHeader);
+      }
+
+      // Préparer les données (inclure name et email de l'utilisateur connecté)
+      final data = {
+        'name': userName,
+        'email': userEmail,
+        'password': newPassword,
+        'password_confirmation': confirmPassword,
+      };
+
+      // Envoyer les données
+      httpRequest.write(json.encode(data));
+
+      final httpResponse = await httpRequest.close();
+      final responseBody = await httpResponse.transform(utf8.decoder).join();
+
+      print('Change Password Response Status: ${httpResponse.statusCode}');
+      print('Change Password Response: $responseBody');
+
+      if (httpResponse.statusCode == 200) {
+        final jsonResponse = json.decode(responseBody);
+        return jsonResponse;
+      } else {
+        final jsonResponse = json.decode(responseBody);
+        throw Exception(jsonResponse['message'] ?? 'Erreur lors du changement de mot de passe');
+      }
+    } catch (e) {
+      print('Erreur changePassword: $e');
+      rethrow;
+    }
+  }
 }
