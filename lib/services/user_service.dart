@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/login_response.dart';
 import '../models/registration_response.dart';
 import '../config/api_config.dart';
+import '../utils/url_helper.dart';
 
 class UserService {
   static LoginUser? _currentUser;
@@ -95,7 +96,10 @@ class UserService {
   static String get userEmail => _currentUser?.email ?? '';
 
   /// Obtenir l'URL de la photo de profil
-  static String get userPhotoUrl => _currentUser?.photoUrl ?? '';
+  static String get userPhotoUrl {
+    final url = _currentUser?.photoUrl ?? '';
+    return url.isNotEmpty ? UrlHelper.fixImageUrl(url) : url;
+  }
 
   /// Vérifier si l'utilisateur est connecté
   static bool get isLoggedIn => _currentUser != null;
@@ -394,6 +398,124 @@ class UserService {
       }
     } catch (e) {
       print('Erreur updateProfile: $e');
+      rethrow;
+    }
+  }
+
+  /// Upload de la photo de profil
+  static Future<Map<String, dynamic>> uploadProfilePhoto(File imageFile) async {
+    try {
+      if (!isLoggedIn) {
+        throw Exception('Utilisateur non connecté');
+      }
+
+      final client = HttpClient();
+      client.badCertificateCallback = (cert, host, port) => true;
+
+      final uri = Uri.parse('${ApiConfig.getBaseUrl()}/users/$userId/photo');
+      final httpRequest = await client.openUrl('POST', uri);
+
+      // Ajouter les headers
+      httpRequest.headers.set('Accept', 'application/json');
+      
+      final authHeader = authorizationHeader;
+      if (authHeader != null) {
+        httpRequest.headers.set('Authorization', authHeader);
+      }
+
+      // Créer le multipart request
+      final boundary = '----WebKitFormBoundary${DateTime.now().millisecondsSinceEpoch}';
+      httpRequest.headers.set('Content-Type', 'multipart/form-data; boundary=$boundary');
+
+      // Lire le fichier image
+      final imageBytes = await imageFile.readAsBytes();
+      final fileName = imageFile.path.split('/').last;
+
+      // Construire le body multipart
+      final List<int> body = [];
+      
+      // Ajouter le champ photo
+      body.addAll(utf8.encode('--$boundary\r\n'));
+      body.addAll(utf8.encode('Content-Disposition: form-data; name="photo"; filename="$fileName"\r\n'));
+      body.addAll(utf8.encode('Content-Type: image/jpeg\r\n\r\n'));
+      body.addAll(imageBytes);
+      body.addAll(utf8.encode('\r\n'));
+      
+      // Fermer le boundary
+      body.addAll(utf8.encode('--$boundary--\r\n'));
+
+      // Envoyer les données
+      httpRequest.add(body);
+
+      final httpResponse = await httpRequest.close();
+      final responseBody = await httpResponse.transform(utf8.decoder).join();
+
+      print('Upload Photo Response Status: ${httpResponse.statusCode}');
+      print('Upload Photo Response: $responseBody');
+
+      if (httpResponse.statusCode == 200) {
+        final jsonResponse = json.decode(responseBody);
+        
+        // Mettre à jour la photo de profil localement
+        if (jsonResponse['success'] == true && jsonResponse['result'] != null) {
+          final updatedUser = jsonResponse['result'];
+          
+          if (_currentUser != null) {
+            _currentUser = LoginUser(
+              id: _currentUser!.id,
+              name: _currentUser!.name,
+              username: _currentUser!.username,
+              updatedAt: _currentUser!.updatedAt,
+              originalUpdatedAt: _currentUser!.originalUpdatedAt,
+              originalLastActivity: _currentUser!.originalLastActivity,
+              createdAtFormatted: _currentUser!.createdAtFormatted,
+              photoUrl: updatedUser['photo_url'] != null 
+                  ? UrlHelper.fixImageUrl(updatedUser['photo_url'])
+                  : _currentUser!.photoUrl,
+              pIsOnline: _currentUser!.pIsOnline,
+              countryFlagUrl: _currentUser!.countryFlagUrl,
+              countryCode: _currentUser!.countryCode,
+              languageCode: _currentUser!.languageCode,
+              userTypeId: _currentUser!.userTypeId,
+              genderId: _currentUser!.genderId,
+              photo: updatedUser['photo'] ?? _currentUser!.photo,
+              about: _currentUser!.about,
+              authField: _currentUser!.authField,
+              email: _currentUser!.email,
+              phone: _currentUser!.phone,
+              phoneNational: _currentUser!.phoneNational,
+              phoneCountry: _currentUser!.phoneCountry,
+              phoneHidden: _currentUser!.phoneHidden,
+              disableComments: _currentUser!.disableComments,
+              createFromIp: _currentUser!.createFromIp,
+              latestUpdateIp: _currentUser!.latestUpdateIp,
+              provider: _currentUser!.provider,
+              providerId: _currentUser!.providerId,
+              emailVerifiedAt: _currentUser!.emailVerifiedAt,
+              phoneVerifiedAt: _currentUser!.phoneVerifiedAt,
+              acceptTerms: _currentUser!.acceptTerms,
+              acceptMarketingOffers: _currentUser!.acceptMarketingOffers,
+              darkMode: _currentUser!.darkMode,
+              timeZone: _currentUser!.timeZone,
+              featured: _currentUser!.featured,
+              blocked: _currentUser!.blocked,
+              closed: _currentUser!.closed,
+              lastActivity: _currentUser!.lastActivity,
+              phoneIntl: _currentUser!.phoneIntl,
+            );
+            
+            // Sauvegarder dans SharedPreferences
+            await _saveToPreferences();
+          }
+        }
+        
+        return jsonResponse;
+      } else {
+        final jsonResponse = json.decode(responseBody);
+        throw Exception(jsonResponse['message'] ?? 'Erreur lors de l\'upload de la photo');
+      }
+    } catch (e) {
+      print('Erreur uploadProfilePhoto: $e');
       rethrow;
     }
   }

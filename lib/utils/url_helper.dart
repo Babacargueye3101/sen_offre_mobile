@@ -12,6 +12,12 @@ class UrlHelper {
     // Forcer HTTP pour le développement local (éviter les problèmes SSL)
     fixedUrl = url.replaceAll('https://', 'http://');
     
+    // Nettoyer les doubles slashes (sauf après http://)
+    fixedUrl = fixedUrl.replaceAllMapped(
+      RegExp(r'(?<!:)//+'),
+      (match) => '/',
+    );
+    
     // Détection automatique de la plateforme
     if (fixedUrl.contains('localhost')) {
       try {

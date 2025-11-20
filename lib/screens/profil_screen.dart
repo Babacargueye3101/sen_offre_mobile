@@ -141,17 +141,54 @@ class _ProfilScreenState extends State<ProfilScreen> with SingleTickerProviderSt
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                UserService.userName.isNotEmpty
-                    ? UserService.userName[0].toUpperCase()
-                    : 'U',
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF4CAF50),
-                ),
-              ),
+            child: ClipOval(
+              child: UserService.userPhotoUrl.isNotEmpty
+                  ? Image.network(
+                      UserService.userPhotoUrl,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFF4CAF50),
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Text(
+                            UserService.userName.isNotEmpty
+                                ? UserService.userName[0].toUpperCase()
+                                : 'U',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF4CAF50),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Text(
+                        UserService.userName.isNotEmpty
+                            ? UserService.userName[0].toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF4CAF50),
+                        ),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 12),

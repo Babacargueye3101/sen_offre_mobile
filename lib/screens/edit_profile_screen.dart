@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/user_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -15,6 +18,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _phoneController;
   bool _isLoading = false;
   String _selectedCountry = 'SN'; // Par défaut Sénégal
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
+  bool _hasChanges = false; // Pour suivre si des modifications ont été faites
 
   // Liste des pays disponibles
   final Map<String, String> _countries = {
@@ -44,6 +50,180 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      // Afficher un dialog pour choisir entre caméra et galerie
+      final source = await showDialog<ImageSource>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Choisir une source'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt, color: Color(0xFF4CAF50)),
+                  title: const Text('Caméra'),
+                  onTap: () => Navigator.pop(context, ImageSource.camera),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library, color: Color(0xFF4CAF50)),
+                  title: const Text('Galerie'),
+                  onTap: () => Navigator.pop(context, ImageSource.gallery),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+
+      if (source != null) {
+        // Demander les permissions
+        bool permissionGranted = false;
+        
+        if (source == ImageSource.camera) {
+          final status = await Permission.camera.request();
+          permissionGranted = status.isGranted;
+          
+          if (status.isPermanentlyDenied) {
+            if (mounted) {
+              _showPermissionDialog('Caméra');
+            }
+            return;
+          }
+        } else {
+          // Pour la galerie, demander la permission photos
+          PermissionStatus status;
+          if (Platform.isAndroid) {
+            // Android 13+ utilise photos, versions antérieures utilisent storage
+            if (await Permission.photos.isGranted) {
+              permissionGranted = true;
+            } else {
+              status = await Permission.photos.request();
+              if (status.isDenied) {
+                status = await Permission.storage.request();
+              }
+              permissionGranted = status.isGranted;
+            }
+          } else {
+            status = await Permission.photos.request();
+            permissionGranted = status.isGranted;
+          }
+          
+          if (!permissionGranted && mounted) {
+            _showPermissionDialog('Galerie');
+            return;
+          }
+        }
+        
+        if (!permissionGranted) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Permission refusée'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        final XFile? image = await _picker.pickImage(
+          source: source,
+          maxWidth: 800,
+          maxHeight: 800,
+          imageQuality: 85,
+        );
+
+        if (image != null) {
+          setState(() {
+            _selectedImage = File(image.path);
+          });
+
+          // Upload immédiatement la photo
+          await _uploadPhoto();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la sélection de l\'image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showPermissionDialog(String permissionName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Permission requise'),
+          content: Text(
+            'L\'accès à $permissionName est nécessaire pour cette fonctionnalité. '
+            'Veuillez activer la permission dans les paramètres de l\'application.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                openAppSettings();
+              },
+              child: const Text('Paramètres'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _uploadPhoto() async {
+    if (_selectedImage == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await UserService.uploadProfilePhoto(_selectedImage!);
+
+      if (mounted) {
+        setState(() {
+          _hasChanges = true; // Marquer qu'il y a eu des modifications
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo de profil mise à jour avec succès !'),
+            backgroundColor: Color(0xFF4CAF50),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de l\'upload: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _saveProfile() async {
@@ -76,6 +256,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
       if (mounted) {
+        setState(() {
+          _hasChanges = true;
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profil mis à jour avec succès !'),
@@ -119,7 +303,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, _hasChanges),
         ),
       ),
       body: Form(
@@ -131,43 +315,62 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Center(
               child: Stack(
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF4CAF50),
-                        width: 3,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        UserService.userName.isNotEmpty
-                            ? UserService.userName[0].toUpperCase()
-                            : 'U',
-                        style: const TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF4CAF50),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF4CAF50),
+                          width: 3,
                         ),
+                        image: _selectedImage != null
+                            ? DecorationImage(
+                                image: FileImage(_selectedImage!),
+                                fit: BoxFit.cover,
+                              )
+                            : (UserService.userPhotoUrl.isNotEmpty
+                                ? DecorationImage(
+                                    image: NetworkImage(UserService.userPhotoUrl),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null),
                       ),
+                      child: (_selectedImage == null && UserService.userPhotoUrl.isEmpty)
+                          ? Center(
+                              child: Text(
+                                UserService.userName.isNotEmpty
+                                    ? UserService.userName[0].toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF4CAF50),
+                                ),
+                              ),
+                            )
+                          : null,
                     ),
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF4CAF50),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                        size: 20,
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4CAF50),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
