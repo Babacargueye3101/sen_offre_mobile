@@ -7,7 +7,9 @@ import 'screens/favoris_screen.dart';
 import 'screens/messages_screen.dart';
 import 'screens/tarifs_screen.dart';
 import 'screens/profil_screen.dart';
+import 'screens/ai_chatbot_screen.dart';
 import 'services/user_service.dart';
+import 'config/env_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +19,9 @@ void main() async {
       statusBarIconBrightness: Brightness.light,
     ),
   );
+  
+  // Charger les variables d'environnement
+  await EnvConfig.load();
   
   // Charger les données de l'utilisateur depuis SharedPreferences
   await UserService.loadFromPreferences();
@@ -102,6 +107,21 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       body: FadeTransition(
         opacity: _animation,
         child: _screens[_currentIndex],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AIChatbotScreen(),
+            ),
+          );
+        },
+        backgroundColor: const Color(0xFF4CAF50), // Couleur verte SenOffre
+        child: const Icon(
+          Icons.smart_toy,
+          color: Colors.white,
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
