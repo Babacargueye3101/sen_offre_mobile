@@ -1,18 +1,7 @@
-import 'dart:io';
-
 class ApiConfig {
   // URL de base de l'API - Configuration automatique selon la plateforme
   static String get baseUrl {
-    if (Platform.isIOS) {
-      // Pour iOS (simulateur et appareil physique)
-      return 'http://localhost:8000/api';
-    } else if (Platform.isAndroid) {
-      // Pour l'émulateur Android
-      return 'http://10.0.2.2:8000/api';
-    } else {
-      // Fallback pour autres plateformes
-      return 'http://localhost:8000/api';
-    }
+    return 'http://update.senoffre.com/api';
   }
   
   // Endpoints
@@ -27,6 +16,7 @@ class ApiConfig {
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'X-AppApiToken': 'senoffre_api_token_2024_secure_key_xyz123',
   };
   
   // Configuration pour les différents environnements

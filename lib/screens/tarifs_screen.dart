@@ -8,45 +8,92 @@ class TarifsScreen extends StatefulWidget {
   State<TarifsScreen> createState() => _TarifsScreenState();
 }
 
-class _TarifsScreenState extends State<TarifsScreen>
-    with TickerProviderStateMixin {
-  bool isAnnualSelected = false;
-  late AnimationController _floatingController;
-  late AnimationController _scaleController;
-  late Animation<double> _floatingAnimation;
+class _TarifsScreenState extends State<TarifsScreen> with TickerProviderStateMixin {
+  int selectedPlanIndex = 1; // Essential par défaut (le plus populaire)
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    _floatingController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _floatingAnimation = Tween<double>(begin: -10, end: 10).animate(
-      CurvedAnimation(parent: _floatingController, curve: Curves.easeInOut),
-    );
-
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+    
+    // Démarrer l'animation après la construction du widget
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _animationController.forward();
+      }
+    });
   }
 
   @override
   void dispose() {
-    _floatingController.dispose();
-    _scaleController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
-  void _selectPlan(bool isAnnual) {
-    setState(() {
-      isAnnualSelected = isAnnual;
-    });
-    _scaleController.forward(from: 0);
-  }
+  final List<Map<String, dynamic>> plans = [
+    {
+      'title': 'Mensuel',
+      'price': '3 000',
+      'period': '/mois',
+      'features': [
+        'Publiez et recevez jusqu\'à 120 annonces par an',
+        'Accès aux appels d\'offres par Email uniquement',
+        '1 utilisateur',
+        'Conserver les annonces en ligne pendant 30 jours',
+      ],
+      'isPopular': false,
+    },
+    {
+      'title': 'Essential',
+      'price': '25 000',
+      'period': '/année',
+      'features': [
+        'Publiez et recevez jusqu\'à 1200 annonces par an',
+        'Accès aux appels d\'offres par Email uniquement',
+        '1 utilisateur',
+        'Idéal pour les entrepreneurs individuels',
+        'Conserver les annonces en ligne pendant 365 jours',
+      ],
+      'isPopular': true,
+    },
+    {
+      'title': 'Standard',
+      'price': '30 000',
+      'period': '/année',
+      'features': [
+        'Publiez et recevez jusqu\'à 1600 annonces par an',
+        'Appels d\'offres par Email + SMS',
+        'Alertes géoréférencées rapides',
+        'Alertes d\'utilisateurs',
+        'Formule la plus équilibrée',
+        'Conserver les annonces en ligne pendant 90 jours',
+      ],
+      'isPopular': false,
+    },
+    {
+      'title': 'Premium',
+      'price': '100 000',
+      'period': '/année',
+      'features': [
+        'Publiez et recevez jusqu\'à 2500 annonces par an',
+        'Appels d\'offres par Email + SMS + WhatsApp',
+        'Support prioritaire (réponse rapide)',
+        'Utilisateurs illimités',
+        'Pour les PME & grandes structures',
+        'Conserver les annonces en ligne pendant 365 jours',
+      ],
+      'isPopular': false,
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -59,217 +106,133 @@ class _TarifsScreenState extends State<TarifsScreen>
             colors: [
               const Color(0xFF4CAF50),
               const Color(0xFF45A049),
-              const Color(0xFF66BB6A),
+              const Color(0xFF66BB6A).withOpacity(0.8),
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Header
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(
-                  child: Text(
-                    'Abonnement',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ),
-              // Content
+              _buildHeader(),
               Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
                     child: Column(
                       children: [
-                        // Description text
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            "Deux formules, un seul objectif : vous connecter aux meilleures opportunités du Sénégal. Recevez chaque jour tous les appels d'offres et donnez plus de visibilité à vos annonces !",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              height: 1.5,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        // Illustration avec l'image tarif.png
-                        AnimatedBuilder(
-                          animation: _floatingAnimation,
-                          builder: (context, child) {
-                            return Transform.translate(
-                              offset: Offset(0, _floatingAnimation.value),
-                              child: child,
-                            );
-                          },
-                          child: Container(
-                            height: 200,
-                            child: Center(
-                              child: Image.asset(
-                                'assets/images/tarif.png',
-                                height: 180,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  // Fallback si l'image n'est pas trouvée
-                                  return Container(
-                                    height: 180,
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.image_not_supported,
-                                          color: Colors.white.withOpacity(0.7),
-                                          size: 48,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Image tarif.png non trouvée',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.white.withOpacity(
-                                              0.7,
-                                            ),
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
+                        const SizedBox(height: 24),
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: plans.length,
+                            itemBuilder: (context, index) {
+                              final plan = plans[index];
+                              final isSelected = selectedPlanIndex == index;
+                              return TweenAnimationBuilder<double>(
+                                duration: Duration(milliseconds: 400 + (index * 100)),
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                builder: (context, value, child) {
+                                  return Transform.translate(
+                                    offset: Offset(0, 50 * (1 - value)),
+                                    child: Opacity(
+                                      opacity: value,
+                                      child: child,
                                     ),
                                   );
                                 },
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        // Offre Annuelle
-                        _buildPricingCard(
-                          isSelected: isAnnualSelected,
-                          title: 'Offre Annuelle',
-                          subtitle: "Jusqu'à 500 annonces - 20,000 FCFA/année",
-                          badge: 'Meilleur Prix',
-                          onTap: () => _selectPlan(true),
-                        ),
-                        const SizedBox(height: 16),
-                        // Offre Mensuelle
-                        _buildPricingCard(
-                          isSelected: !isAnnualSelected,
-                          title: 'Offre Mensuelle',
-                          subtitle: "Jusqu'à 130 annonces - 3,000 FCFA/mois",
-                          onTap: () => _selectPlan(false),
-                        ),
-                        const SizedBox(height: 32),
-                        // Confirm button
-                        Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PaymentScreen(
-                                    isAnnual: isAnnualSelected,
-                                    planTitle: isAnnualSelected
-                                        ? 'Abonnement Annuel'
-                                        : 'Abonnement Mensuel',
-                                    price: isAnnualSelected
-                                        ? '20,000'
-                                        : '3,000',
-                                    period: isAnnualSelected
-                                        ? '/année'
-                                        : '/mois',
-                                  ),
+                                child: _buildPricingCard(
+                                  index: index,
+                                  isSelected: isSelected,
+                                  title: plan['title'],
+                                  price: plan['price'],
+                                  period: plan['period'],
+                                  features: List<String>.from(plan['features']),
+                                  isPopular: plan['isPopular'],
                                 ),
                               );
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF4CAF50),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 20,
+                                offset: const Offset(0, -5),
                               ),
-                              elevation: 0,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Confirmer cette offre',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  color: const Color(0xFF4CAF50),
+                            ],
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF4CAF50),
+                                  Color(0xFF45A049),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF4CAF50).withOpacity(0.4),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        // Terms text
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              height: 1.5,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final selectedPlan = plans[selectedPlanIndex];
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PaymentScreen(
+                                      isAnnual: selectedPlan['period'] == '/année',
+                                      planTitle: 'Abonnement ${selectedPlan['title']}',
+                                      price: selectedPlan['price'],
+                                      period: selectedPlan['period'],
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(vertical: 18),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                minimumSize: const Size(double.infinity, 56),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Text(
+                                    'Continuer',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Icon(Icons.arrow_forward_rounded, size: 24),
+                                ],
+                              ),
                             ),
-                            children: [
-                              const TextSpan(
-                                text:
-                                    'En passant cette commande, vous acceptez les ',
-                              ),
-                              TextSpan(
-                                text: 'conditions d\'utilisation',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  decoration: TextDecoration.underline,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const TextSpan(text: ' et la '),
-                              TextSpan(
-                                text: 'politique de confidentialité',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  decoration: TextDecoration.underline,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const TextSpan(text: '.'),
-                            ],
                           ),
                         ),
-                        const SizedBox(height: 80),
                       ],
                     ),
                   ),
@@ -282,83 +245,284 @@ class _TarifsScreenState extends State<TarifsScreen>
     );
   }
 
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          const Text(
+            'Tarifs Entreprise',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: const Text(
+              'Choisissez le plan qui convient à votre entreprise',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPricingCard({
+    required int index,
     required bool isSelected,
     required String title,
-    required String subtitle,
-    String? badge,
-    required VoidCallback onTap,
+    required String price,
+    required String period,
+    required List<String> features,
+    required bool isPopular,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        setState(() {
+          selectedPlanIndex = index;
+        });
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(16),
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white,
+                    const Color(0xFF4CAF50).withOpacity(0.05),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : Colors.white,
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
+            color: isSelected
+                ? const Color(0xFF4CAF50)
+                : Colors.grey.shade200,
+            width: isSelected ? 2.5 : 1,
           ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: isSelected
-                              ? const Color(0xFF4CAF50)
-                              : Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (badge != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            badge,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: isSelected
-                          ? const Color(0xFF4CAF50).withOpacity(0.8)
-                          : Colors.white.withOpacity(0.8),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? const Color(0xFF4CAF50).withOpacity(0.25)
+                  : Colors.black.withOpacity(0.06),
+              blurRadius: isSelected ? 20 : 10,
+              offset: Offset(0, isSelected ? 8 : 4),
+              spreadRadius: isSelected ? 2 : 0,
             ),
           ],
+        ),
+        transform: isSelected ? (Matrix4.identity()..scale(1.02)) : Matrix4.identity(),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isPopular)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFFFFB300),
+                        const Color(0xFFFFC107),
+                      ],
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(
+                        Icons.star_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'PLUS POPULAIRE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected
+                                      ? const Color(0xFF4CAF50)
+                                      : Colors.black87,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    price,
+                                    style: TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF4CAF50),
+                                      letterSpacing: -1,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'FCFA',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF4CAF50),
+                                          ),
+                                        ),
+                                        Text(
+                                          period,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isSelected)
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF4CAF50),
+                                  Color(0xFF45A049),
+                                ],
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF4CAF50).withOpacity(0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      height: 1,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.grey.shade200,
+                            Colors.grey.shade100,
+                            Colors.grey.shade200,
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ...features.asMap().entries.map((entry) {
+                      final feature = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.check_rounded,
+                                color: Color(0xFF4CAF50),
+                                size: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                feature,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[800],
+                                  height: 1.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

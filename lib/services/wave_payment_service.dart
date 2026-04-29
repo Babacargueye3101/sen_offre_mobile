@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
+import 'user_service.dart';
 
 class WavePaymentService {
   static Future<Map<String, dynamic>> initiatePayment({
@@ -17,12 +18,21 @@ class WavePaymentService {
         'description': description,
       };
 
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-AppApiToken': ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      };
+
+      // Ajouter le token d'authentification si disponible
+      final authHeader = UserService.authorizationHeader;
+      if (authHeader != null) {
+        headers['Authorization'] = authHeader;
+      }
+
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: headers,
         body: json.encode(body),
       );
 
@@ -52,11 +62,20 @@ class WavePaymentService {
     try {
       final url = Uri.parse('${ApiConfig.getBaseUrl()}/payments/wave/status/$checkoutId');
       
+      final headers = {
+        'Accept': 'application/json',
+        'X-AppApiToken': ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      };
+
+      // Ajouter le token d'authentification si disponible
+      final authHeader = UserService.authorizationHeader;
+      if (authHeader != null) {
+        headers['Authorization'] = authHeader;
+      }
+
       final response = await http.get(
         url,
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers: headers,
       );
 
       if (response.statusCode == 200) {

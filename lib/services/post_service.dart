@@ -11,6 +11,7 @@ class PostService {
   static Future<PostResponse> getPosts({
     int page = 1,
     int perPage = 10,
+    String? query,
     int? cityId,
     int? postTypeId,
     int? categoryId,
@@ -21,12 +22,24 @@ class PostService {
       client.badCertificateCallback = (cert, host, port) => true;
       
       // Construire l'URL avec les paramètres de pagination et filtres
-      final queryParams = {
+      // NOTE API: op=search est obligatoire pour activer les filtres.
+      // NOTE API: utiliser 'c' pour la catégorie, pas 'category_id'.
+      // NOTE API: utiliser 'perPage' (camelCase), pas 'per_page'.
+      // NOTE API: supporter 'q' pour la recherche.
+      final hasSearchFilters =
+          (query != null && query.trim().isNotEmpty) ||
+          cityId != null ||
+          postTypeId != null ||
+          categoryId != null;
+
+      final queryParams = <String, String>{
         'page': page.toString(),
         'perPage': perPage.toString(),
-        if (cityId != null) 'city_id': cityId.toString(),
+        if (hasSearchFilters) 'op': 'search',
+        if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
+        if (cityId != null) 'l': cityId.toString(),
         if (postTypeId != null) 'post_type_id': postTypeId.toString(),
-        if (categoryId != null) 'category_id': categoryId.toString(),
+        if (categoryId != null) 'c': categoryId.toString(),
       };
       
       final uri = Uri.parse('${ApiConfig.getBaseUrl()}$_postsEndpoint').replace(
@@ -135,63 +148,12 @@ class PostService {
     int page = 1,
     int perPage = 10,
   }) async {
-    try {
-      final client = HttpClient();
-      client.badCertificateCallback = (cert, host, port) => true;
-      
-      // Construire les paramètres de recherche
-      final queryParams = <String, String>{
-        'page': page.toString(),
-        'perPage': perPage.toString(),
-      };
-      
-      if (query != null && query.isNotEmpty) {
-        queryParams['q'] = query;
-      }
-      
-      if (categoryId != null) {
-        queryParams['category_id'] = categoryId.toString();
-      }
-      
-      final uri = Uri.parse('${ApiConfig.getBaseUrl()}$_postsEndpoint')
-          .replace(queryParameters: queryParams);
-      final httpRequest = await client.getUrl(uri);
-      
-      // Ajouter les headers par défaut
-      ApiConfig.defaultHeaders.forEach((key, value) {
-        httpRequest.headers.set(key, value);
-      });
-      
-      // Ajouter le token d'authentification si disponible
-      final authHeader = UserService.authorizationHeader;
-      if (authHeader != null) {
-        httpRequest.headers.set('Authorization', authHeader);
-      }
-      
-      final response = await httpRequest.close();
-      final responseBody = await response.transform(utf8.decoder).join();
-      
-      client.close();
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = jsonDecode(responseBody);
-        return PostResponse.fromJson(jsonData);
-      } else {
-        throw PostException(
-          message: 'Erreur lors de la recherche des offres',
-          statusCode: response.statusCode,
-        );
-      }
-    } catch (e) {
-      if (e is PostException) {
-        rethrow;
-      }
-      print('Error searching posts: $e');
-      throw PostException(
-        message: 'Erreur de connexion lors de la recherche.',
-        statusCode: 0,
-      );
-    }
+    return getPosts(
+      page: page,
+      perPage: perPage,
+      query: query,
+      categoryId: categoryId,
+    );
   }
 }
 

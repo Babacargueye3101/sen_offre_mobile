@@ -311,6 +311,10 @@ class UserService {
       // Ajouter les headers
       httpRequest.headers.set('Content-Type', 'application/json');
       httpRequest.headers.set('Accept', 'application/json');
+      httpRequest.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = authorizationHeader;
       if (authHeader != null) {
@@ -417,6 +421,10 @@ class UserService {
 
       // Ajouter les headers
       httpRequest.headers.set('Accept', 'application/json');
+      httpRequest.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = authorizationHeader;
       if (authHeader != null) {
@@ -547,6 +555,10 @@ class UserService {
       // Ajouter les headers
       httpRequest.headers.set('Content-Type', 'application/json');
       httpRequest.headers.set('Accept', 'application/json');
+      httpRequest.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = authorizationHeader;
       if (authHeader != null) {

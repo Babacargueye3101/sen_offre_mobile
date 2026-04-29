@@ -21,6 +21,10 @@ class MessagingService {
 
       final request = await client.openUrl('GET', uri);
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {
@@ -53,6 +57,10 @@ class MessagingService {
 
       final request = await client.openUrl('GET', uri);
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {
@@ -85,6 +93,10 @@ class MessagingService {
 
       final request = await client.openUrl('GET', uri);
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {
@@ -123,6 +135,10 @@ class MessagingService {
 
       request.headers.set('Content-Type', 'application/json');
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {
@@ -169,6 +185,10 @@ class MessagingService {
 
       request.headers.set('Content-Type', 'application/json');
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {
@@ -205,6 +225,10 @@ class MessagingService {
       final request = await client.openUrl('DELETE', uri);
 
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {
@@ -233,6 +257,10 @@ class MessagingService {
       final request = await client.openUrl('POST', uri);
 
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {
@@ -261,6 +289,10 @@ class MessagingService {
       final request = await client.openUrl('POST', uri);
 
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {
@@ -289,6 +321,10 @@ class MessagingService {
       final request = await client.openUrl('POST', uri);
 
       request.headers.set('Accept', 'application/json');
+      request.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
       
       final authHeader = UserService.authorizationHeader;
       if (authHeader != null) {

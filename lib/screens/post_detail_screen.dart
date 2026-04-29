@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/post.dart';
 import '../models/resume.dart';
+import '../config/api_config.dart';
 import '../utils/url_helper.dart';
 import '../services/saved_posts_service.dart';
 import '../services/user_service.dart';
@@ -767,7 +768,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     
     // Si pas de logo_url, essayer le champ logo direct
     if (logoUrl.isEmpty && widget.post.logo.isNotEmpty) {
-      logoUrl = UrlHelper.fixImageUrl('http://localhost:8000/storage/${widget.post.logo}');
+      final storageBaseUrl = ApiConfig.getBaseUrl().replaceAll('/api', '');
+      logoUrl = UrlHelper.fixImageUrl('$storageBaseUrl/storage/${widget.post.logo}');
     }
 
     if (logoUrl.isNotEmpty) {

@@ -9,6 +9,7 @@ import '../services/post_type_service.dart';
 import '../services/city_service.dart';
 import '../services/user_service.dart';
 import '../services/saved_posts_service.dart';
+import '../config/api_config.dart';
 import '../utils/url_helper.dart';
 import 'post_detail_screen.dart';
 
@@ -25,6 +26,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
   List<PostType> _postTypes = [];
   List<City> _cities = [];
   bool _isLoading = false;
+  bool _isLoadingCategories = false;
   bool _hasMorePosts = true;
   int _currentPage = 1;
   final int _perPage = 50; // Charger plus d'offres dans la liste complète
@@ -35,7 +37,6 @@ class _OffersListScreenState extends State<OffersListScreen> {
   PostType? _selectedPostType;
   City? _selectedCity;
   Category? _selectedCategory;
-  bool _showCategories = false;
   
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -65,14 +66,23 @@ class _OffersListScreenState extends State<OffersListScreen> {
 
   Future<void> _loadCategories() async {
     try {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingCategories = true;
+      });
       final categories = await CategoryService.getAllCategories();
       final activeCategories = CategoryService.getActiveCategories(categories);
       if (!mounted) return;
       setState(() {
         _categories = activeCategories;
+        _isLoadingCategories = false;
       });
     } catch (e) {
       print('Erreur lors du chargement des catégories: $e');
+      if (!mounted) return;
+      setState(() {
+        _isLoadingCategories = false;
+      });
     }
   }
 
@@ -146,6 +156,10 @@ class _OffersListScreenState extends State<OffersListScreen> {
       final response = await PostService.getPosts(
         page: _currentPage,
         perPage: _perPage,
+        query: _searchQuery,
+        cityId: _selectedCity?.id,
+        postTypeId: _selectedPostType?.id,
+        categoryId: _selectedCategory?.id,
       );
 
       print('Réponse reçue: ${response.result.data.length} offres');
@@ -191,7 +205,6 @@ class _OffersListScreenState extends State<OffersListScreen> {
   void _selectCategory(Category? category) {
     setState(() {
       _selectedCategory = category;
-      _showCategories = false;
     });
     _performSearch(); // Relancer la recherche avec la nouvelle catégorie
   }
@@ -236,6 +249,194 @@ class _OffersListScreenState extends State<OffersListScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showCategoryBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Catégories',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.grey[100],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                _selectCategory(null);
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _selectedCategory == null
+                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedCategory == null
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey[300]!,
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.apps,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Toutes les catégories',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (_selectedCategory == null)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(height: 24),
+            Expanded(
+              child: _isLoadingCategories
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+                      ),
+                    )
+                  : _categories.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Aucune catégorie disponible',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _categories.length,
+                          itemBuilder: (context, index) {
+                            final category = _categories[index];
+                            final isSelected = _selectedCategory?.id == category.id;
+
+                            return InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                _selectCategory(category);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF4CAF50)
+                                        : Colors.grey[200]!,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.folder_outlined,
+                                        color: Color(0xFF4CAF50),
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        category.name,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Color(0xFF4CAF50),
+                                        size: 24,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -693,107 +894,6 @@ class _OffersListScreenState extends State<OffersListScreen> {
     );
   }
 
-  Widget _buildCategoryDropdown() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        constraints: const BoxConstraints(maxHeight: 300), // Limiter la hauteur
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-            // Option "Toutes les catégories"
-            InkWell(
-              onTap: () => _selectCategory(null),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.category, 
-                      color: const Color(0xFF4CAF50), size: 20),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Toutes les catégories',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    if (_selectedCategory == null)
-                      const Icon(Icons.check, 
-                        color: Color(0xFF4CAF50), size: 20),
-                  ],
-                ),
-              ),
-            ),
-            // Liste des catégories
-            if (_categories.isNotEmpty)
-              ...(_categories.take(5).map((category) => InkWell(
-                onTap: () => _selectCategory(category),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.folder_outlined, 
-                        color: const Color(0xFF4CAF50), size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          category.name,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      if (_selectedCategory?.id == category.id)
-                        const Icon(Icons.check, 
-                          color: Color(0xFF4CAF50), size: 20),
-                    ],
-                  ),
-                ),
-              )).toList())
-            else
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: const Text(
-                  'Chargement des catégories...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _performSearch() {
     // Implémenter la recherche
     print('Recherche: $_searchQuery');
@@ -887,7 +987,8 @@ class _OffersListScreenState extends State<OffersListScreen> {
     
     // Si pas de logo_url, essayer le champ logo direct
     if (logoUrl.isEmpty && post.logo.isNotEmpty) {
-      logoUrl = UrlHelper.fixImageUrl('http://localhost:8000/storage/${post.logo}');
+      final storageBaseUrl = ApiConfig.getBaseUrl().replaceAll('/api', '');
+      logoUrl = UrlHelper.fixImageUrl('$storageBaseUrl/storage/${post.logo}');
     }
 
     if (logoUrl.isNotEmpty) {
@@ -1165,16 +1266,12 @@ class _OffersListScreenState extends State<OffersListScreen> {
                             fontSize: 12,
                           ),
                         ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                        ),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.person_outline, color: Colors.white),
                   ),
                 ],
               ),
@@ -1233,11 +1330,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
                               ),
                               const SizedBox(width: 12),
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _showCategories = !_showCategories;
-                                  });
-                                },
+                                onTap: _showCategoryBottomSheet,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   decoration: BoxDecoration(
@@ -1255,12 +1348,7 @@ class _OffersListScreenState extends State<OffersListScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 4),
-                                      Icon(
-                                        _showCategories 
-                                          ? Icons.keyboard_arrow_up 
-                                          : Icons.keyboard_arrow_down, 
-                                        size: 16
-                                      ),
+                                      const Icon(Icons.keyboard_arrow_down, size: 16),
                                     ],
                                   ),
                                 ),
@@ -1298,7 +1386,6 @@ class _OffersListScreenState extends State<OffersListScreen> {
                             ),
                           ),
                           // Liste déroulante des catégories
-                          if (_showCategories) _buildCategoryDropdown(),
                           const SizedBox(height: 16),
                           // Nombre d'offres trouvées
                           Align(

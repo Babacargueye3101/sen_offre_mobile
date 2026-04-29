@@ -30,6 +30,10 @@ class CompanyService {
       final httpRequest = await client.getUrl(uri);
       httpRequest.headers.set('Content-Type', 'application/json');
       httpRequest.headers.set('Accept', 'application/json');
+      httpRequest.headers.set(
+        'X-AppApiToken',
+        ApiConfig.defaultHeaders['X-AppApiToken'] ?? 'senoffre_api_token_2024_secure_key_xyz123',
+      );
 
       final token = authToken ?? UserService.authToken;
       final tokenType = UserService.tokenType ?? 'Bearer';

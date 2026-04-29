@@ -9,6 +9,7 @@ import '../services/post_type_service.dart';
 import '../services/city_service.dart';
 import '../services/user_service.dart';
 import '../services/saved_posts_service.dart';
+import '../config/api_config.dart';
 import '../utils/url_helper.dart';
 import 'offers_list_screen.dart';
 import 'post_detail_screen.dart';
@@ -32,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
   PostType? _selectedPostType;
   City? _selectedCity;
   Category? _selectedCategory;
-  bool _showCategories = false;
   
   // Variables pour les offres
   List<Post> _posts = [];
@@ -179,17 +179,14 @@ class _HomeScreenState extends State<HomeScreen> {
     await _loadPosts();
   }
 
-  void _toggleCategories() {
+  void _selectCategory(Category? category) {
     setState(() {
-      _showCategories = !_showCategories;
+      _selectedCategory = category;
     });
-  }
-
-  void _selectCategory(Category category) {
-    setState(() {
-      _showCategories = false;
-    });
-    print('Catégorie sélectionnée: ${category.name}');
+    if (category != null) {
+      print('Catégorie sélectionnée: ${category.name}');
+    }
+    _loadPosts();
   }
 
   void _selectPostType(PostType? postType) {
@@ -204,6 +201,195 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedCity = city;
     });
     _loadPosts();
+  }
+
+  void _showCategoryBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Catégories',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.grey[100],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                _selectCategory(null);
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _selectedCategory == null
+                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedCategory == null
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey[300]!,
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.apps,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Toutes les catégories',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (_selectedCategory == null)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFF4CAF50),
+                        size: 24,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(height: 24),
+            Expanded(
+              child: _isLoadingCategories
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+                      ),
+                    )
+                  : _categories.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Aucune catégorie disponible',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _categories.length,
+                          itemBuilder: (context, index) {
+                            final category = _categories[index];
+                            final isSelected = _selectedCategory?.id == category.id;
+
+                            return InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                _selectCategory(category);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF4CAF50)
+                                        : Colors.grey[200]!,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.folder_outlined,
+                                        color: Color(0xFF4CAF50),
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        category.name,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight:
+                                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Color(0xFF4CAF50),
+                                        size: 24,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _navigateToOffersList() {
@@ -801,7 +987,8 @@ class _HomeScreenState extends State<HomeScreen> {
     
     // Si pas de logo_url, essayer le champ logo direct
     if (logoUrl.isEmpty && post.logo.isNotEmpty) {
-      logoUrl = UrlHelper.fixImageUrl('http://localhost:8000/storage/${post.logo}');
+      final storageBaseUrl = ApiConfig.getBaseUrl().replaceAll('/api', '');
+      logoUrl = UrlHelper.fixImageUrl('$storageBaseUrl/storage/${post.logo}');
     }
 
     if (logoUrl.isNotEmpty) {
@@ -1089,10 +1276,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                  ),
                 ],
               ),
             ),
@@ -1129,7 +1312,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             child: InkWell(
-                              onTap: _toggleCategories,
+                              onTap: _showCategoryBottomSheet,
                               borderRadius: BorderRadius.circular(16),
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
@@ -1138,20 +1321,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Icon(Icons.category_outlined, 
                                       color: const Color(0xFF4CAF50), size: 20),
                                     const SizedBox(width: 12),
-                                    const Text(
-                                      'Catégories',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xFF4CAF50),
+                                    Expanded(
+                                      child: Text(
+                                        _selectedCategory?.name ?? 'Catégories',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF4CAF50),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     const SizedBox(width: 4),
-                                    Icon(
-                                      _showCategories 
-                                        ? Icons.keyboard_arrow_up
-                                        : Icons.keyboard_arrow_down,
-                                      color: const Color(0xFF4CAF50),
+                                    const Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: Color(0xFF4CAF50),
                                       size: 16,
                                     ),
                                   ],
@@ -1160,138 +1345,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
-                        
-                        // Liste déroulante des catégories
-                        if (_showCategories)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Container(
-                              margin: const EdgeInsets.only(top: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: _isLoadingCategories
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(20.0),
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
-                                        ),
-                                      ),
-                                    )
-                                  : _categories.isEmpty
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(20.0),
-                                          child: Center(
-                                            child: Text(
-                                              'Aucune catégorie disponible',
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : Column(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: const BoxDecoration(
-                                                color: Color(0xFF4CAF50),
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(12),
-                                                  topRight: Radius.circular(12),
-                                                ),
-                                              ),
-                                              child: const Row(
-                                                children: [
-                                                  Icon(Icons.category, color: Colors.white, size: 16),
-                                                  SizedBox(width: 8),
-                                                  Text(
-                                                    'Sélectionnez une catégorie',
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Container(
-                                              constraints: const BoxConstraints(maxHeight: 200),
-                                              child: ListView.builder(
-                                                shrinkWrap: true,
-                                                itemCount: _categories.length,
-                                                itemBuilder: (context, index) {
-                                                  final category = _categories[index];
-                                                  return InkWell(
-                                                    onTap: () => _selectCategory(category),
-                                                    child: Container(
-                                                      padding: const EdgeInsets.symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 12,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        border: index < _categories.length - 1
-                                                            ? const Border(
-                                                                bottom: BorderSide(
-                                                                  color: Color(0xFFE0E0E0),
-                                                                  width: 0.5,
-                                                                ),
-                                                              )
-                                                            : null,
-                                                      ),
-                                                      child: Row(
-                                                        children: [
-                                                          Container(
-                                                            width: 32,
-                                                            height: 32,
-                                                            decoration: BoxDecoration(
-                                                              color: const Color(0xFF4CAF50).withOpacity(0.1),
-                                                              borderRadius: BorderRadius.circular(16),
-                                                            ),
-                                                            child: const Icon(
-                                                              Icons.folder,
-                                                              color: Color(0xFF4CAF50),
-                                                              size: 16,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(width: 12),
-                                                          Expanded(
-                                                            child: Text(
-                                                              category.name,
-                                                              style: const TextStyle(
-                                                                fontSize: 14,
-                                                                fontWeight: FontWeight.w500,
-                                                                color: Colors.black87,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          const Icon(
-                                                            Icons.arrow_forward_ios,
-                                                            color: Colors.grey,
-                                                            size: 12,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                            ),
-                          ),
                         
                         const SizedBox(height: 16),
                         // Sponsorisé banner

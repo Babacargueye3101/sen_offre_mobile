@@ -29,21 +29,34 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF4CAF50),
+                Color(0xFF45A049),
+              ],
+            ),
+          ),
+        ),
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black,
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 20,
           ),
         ),
         title: const Text(
-          'Moyen de paiement',
+          'Paiement',
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
           ),
         ),
         centerTitle: true,
@@ -58,15 +71,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 children: [
                   // Résumé de la commande
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white,
+                          Colors.grey[50]!,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
+                          color: const Color(0xFF4CAF50).withOpacity(0.15),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                          spreadRadius: 0,
                         ),
                       ],
                     ),
@@ -77,10 +98,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             child: Image.asset(
                               widget.isAnnual 
                                   ? 'assets/images/subscription_12_months.png'
@@ -90,8 +118,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 // Fallback si l'image n'est pas trouvée
                                 return Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF4CAF50),
-                                    borderRadius: BorderRadius.circular(12),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFF4CAF50),
+                                        Color(0xFF45A049),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -200,22 +235,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const Text(
                     'Cartes de crédit et de débit',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 19,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
+                      letterSpacing: 0.3,
                     ),
                   ),
                   const SizedBox(height: 16),
                   
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white,
+                          Colors.grey[50]!,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -240,22 +283,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const Text(
                     'Mobile Money',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 19,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
+                      letterSpacing: 0.3,
                     ),
                   ),
                   const SizedBox(height: 16),
                   
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white,
+                          Colors.grey[50]!,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -317,7 +368,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            // Afficher la facture détaillée
+                            _showDetailedInvoice();
                           },
                           child: const Text(
                             'Voir facture détaillée',
@@ -330,30 +381,65 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                       ],
                     ),
-                    ElevatedButton(
-                      onPressed: selectedPaymentMethod.isNotEmpty
-                          ? () {
-                              // Traiter le paiement
-                              _processPayment();
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4CAF50),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: selectedPaymentMethod.isNotEmpty
+                            ? const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF4CAF50),
+                                  Color(0xFF45A049),
+                                ],
+                              )
+                            : null,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: selectedPaymentMethod.isNotEmpty
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF4CAF50).withOpacity(0.4),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ]
+                            : null,
                       ),
-                      child: const Text(
-                        'Payer',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      child: ElevatedButton(
+                        onPressed: selectedPaymentMethod.isNotEmpty
+                            ? () {
+                                // Traiter le paiement
+                                _processPayment();
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: selectedPaymentMethod.isNotEmpty
+                              ? Colors.transparent
+                              : Colors.grey[300],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 18,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                          shadowColor: Colors.transparent,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.lock_outline, size: 20),
+                            SizedBox(width: 12),
+                            Text(
+                              'Payer maintenant',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -880,7 +966,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Future<void> _processWavePayment() async {
     // Générer une référence unique
     final reference = 'SENOFFRE_${DateTime.now().millisecondsSinceEpoch}';
-    final amount = double.parse(widget.price.replaceAll(',', ''));
+    // Nettoyer le prix : supprimer les espaces et les virgules
+    final cleanPrice = widget.price.replaceAll(' ', '').replaceAll(',', '');
+    final amount = double.parse(cleanPrice);
     final description = 'Paiement ${widget.planTitle} - SenOffre';
 
     final result = await WavePaymentService.initiatePayment(
@@ -1044,6 +1132,204 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDetailedInvoice() {
+    // Nettoyer le prix pour les calculs
+    final cleanPrice = widget.price.replaceAll(' ', '').replaceAll(',', '');
+    final amount = double.parse(cleanPrice);
+    final tax = amount * 0.18; // TVA 18%
+    final total = amount + tax;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                Colors.grey[50]!,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.receipt_long_rounded,
+                        color: Color(0xFF4CAF50),
+                        size: 28,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Facture détaillée',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                    color: Colors.grey[600],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.planTitle,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4CAF50),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.period,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 16),
+              _buildInvoiceRow('Abonnement', '${widget.price} Fcfa'),
+              const SizedBox(height: 12),
+              _buildInvoiceRow('Quantité', '1'),
+              const SizedBox(height: 12),
+              _buildInvoiceRow('Sous-total', '${widget.price} Fcfa'),
+              const SizedBox(height: 12),
+              _buildInvoiceRow(
+                'TVA (18%)',
+                '${tax.toStringAsFixed(0)} Fcfa',
+                isHighlighted: true,
+              ),
+              const SizedBox(height: 16),
+              const Divider(thickness: 2),
+              const SizedBox(height: 16),
+              _buildInvoiceRow(
+                'Total',
+                '${total.toStringAsFixed(0)} Fcfa',
+                isTotal: true,
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.blue[200]!,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: Colors.blue[700],
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Cette facture sera envoyée par email après confirmation du paiement.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[900],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Compris',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInvoiceRow(String label, String value, {bool isTotal = false, bool isHighlighted = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isTotal ? 18 : 15,
+            fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
+            color: isTotal ? Colors.black87 : (isHighlighted ? const Color(0xFF4CAF50) : Colors.grey[700]),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isTotal ? 20 : 15,
+            fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+            color: isTotal ? const Color(0xFF4CAF50) : Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -26,6 +26,14 @@ class ResumeService {
       ApiConfig.defaultHeaders.forEach((key, value) {
         httpRequest.headers.set(key, value);
       });
+
+      // Certains endpoints attendent un header d'API token différent (ex: x-apitoken)
+      if (!(httpRequest.headers.value('x-apitoken')?.isNotEmpty ?? false)) {
+        final appToken = ApiConfig.defaultHeaders['X-AppApiToken'];
+        if (appToken != null && appToken.isNotEmpty) {
+          httpRequest.headers.set('x-apitoken', appToken);
+        }
+      }
       
       // Ajouter le token d'authentification
       final authHeader = UserService.authorizationHeader;
@@ -69,6 +77,18 @@ class ResumeService {
       // Créer la requête multipart
       final boundary = 'dart-boundary-${DateTime.now().millisecondsSinceEpoch}';
       httpRequest.headers.set('Content-Type', 'multipart/form-data; boundary=$boundary');
+
+      // Headers nécessaires côté API (ne pas réutiliser Content-Type JSON ici)
+      httpRequest.headers.set('Accept', 'application/json');
+      final appToken = ApiConfig.defaultHeaders['X-AppApiToken'];
+      if (appToken != null && appToken.isNotEmpty) {
+        if (httpRequest.headers.value('X-AppApiToken') == null) {
+          httpRequest.headers.set('X-AppApiToken', appToken);
+        }
+        if (httpRequest.headers.value('x-apitoken') == null) {
+          httpRequest.headers.set('x-apitoken', appToken);
+        }
+      }
       
       // Ajouter le token d'authentification
       final authHeader = UserService.authorizationHeader;

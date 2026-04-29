@@ -3,6 +3,7 @@ import '../models/saved_post.dart';
 import '../models/post.dart';
 import '../services/saved_posts_service.dart';
 import '../services/user_service.dart';
+import '../config/api_config.dart';
 import '../utils/url_helper.dart';
 import 'home_screen.dart';
 import 'post_detail_screen.dart';
@@ -124,7 +125,8 @@ class _FavorisScreenState extends State<FavorisScreen> {
     
     // Si pas de logo_url, essayer le champ logo direct
     if (logoUrl.isEmpty && post.logo.isNotEmpty) {
-      logoUrl = UrlHelper.fixImageUrl('http://localhost:8000/storage/${post.logo}');
+      final storageBaseUrl = ApiConfig.getBaseUrl().replaceAll('/api', '');
+      logoUrl = UrlHelper.fixImageUrl('$storageBaseUrl/storage/${post.logo}');
     }
 
     if (logoUrl.isNotEmpty) {
