@@ -8,89 +8,73 @@ class TarifsScreen extends StatefulWidget {
   State<TarifsScreen> createState() => _TarifsScreenState();
 }
 
-class _TarifsScreenState extends State<TarifsScreen> with TickerProviderStateMixin {
-  int selectedPlanIndex = 1; // Essential par défaut (le plus populaire)
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-    
-    // Démarrer l'animation après la construction du widget
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _animationController.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+class _TarifsScreenState extends State<TarifsScreen> {
+  int selectedPlanIndex = 0; // Offre Annuelle par défaut
 
   final List<Map<String, dynamic>> plans = [
     {
       'title': 'Mensuel',
       'price': '3 000',
-      'period': '/mois',
+      'period': 'FCFA',
+      'periodLabel': '/mois',
+      'maxAnnonces': '120',
       'features': [
-        'Publiez et recevez jusqu\'à 120 annonces par an',
+        'Publiez et recevez jusqu\'à 120 annonces par mois',
         'Accès aux appels d\'offres par Email uniquement',
         '1 utilisateur',
         'Conserver les annonces en ligne pendant 30 jours',
       ],
+      'badge': null,
       'isPopular': false,
     },
     {
       'title': 'Essential',
       'price': '25 000',
-      'period': '/année',
+      'period': 'FCFA',
+      'periodLabel': '/année',
+      'maxAnnonces': '1200',
       'features': [
-        'Publiez et recevez jusqu\'à 1200 annonces par an',
+        'Publiez et recevez jusqu\'à 1200 annonces par année',
         'Accès aux appels d\'offres par Email uniquement',
         '1 utilisateur',
         'Idéal pour les entrepreneurs individuels',
         'Conserver les annonces en ligne pendant 365 jours',
       ],
+      'badge': 'PLUS POPULAIRE',
       'isPopular': true,
     },
     {
       'title': 'Standard',
       'price': '30 000',
-      'period': '/année',
+      'period': 'FCFA',
+      'periodLabel': '/année',
+      'maxAnnonces': '1500',
       'features': [
-        'Publiez et recevez jusqu\'à 1600 annonces par an',
+        'Publiez et recevez jusqu\'à 1500 annonces par année',
         'Appels d\'offres par Email + SMS',
-        'Alertes géoréférencées rapides',
-        'Alertes d\'utilisateurs',
+        'Alertes quotidiennes rapides',
+        'Jusqu\'à 2 utilisateurs',
         'Formule la plus équilibrée',
-        'Conserver les annonces en ligne pendant 90 jours',
+        'Conserver les annonces en ligne pendant 365 jours',
       ],
+      'badge': null,
       'isPopular': false,
     },
     {
       'title': 'Premium',
       'price': '100 000',
-      'period': '/année',
+      'period': 'FCFA',
+      'periodLabel': '/année',
+      'maxAnnonces': '2500',
       'features': [
-        'Publiez et recevez jusqu\'à 2500 annonces par an',
+        'Publiez et recevez jusqu\'à 2500 annonces par année',
         'Appels d\'offres par Email + SMS + WhatsApp',
         'Support prioritaire (réponse rapide)',
         'Utilisateurs illimités',
         'Pour les PME & grandes structures',
         'Conserver les annonces en ligne pendant 365 jours',
       ],
+      'badge': null,
       'isPopular': false,
     },
   ];
@@ -99,426 +83,313 @@ class _TarifsScreenState extends State<TarifsScreen> with TickerProviderStateMix
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF4CAF50),
-              const Color(0xFF45A049),
-              const Color(0xFF66BB6A).withOpacity(0.8),
+              Color(0xFF4CAF50),
+              Color(0xFF45A049),
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              _buildHeader(),
-              Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
-                      ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
                     ),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 24),
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: plans.length,
-                            itemBuilder: (context, index) {
-                              final plan = plans[index];
-                              final isSelected = selectedPlanIndex == index;
-                              return TweenAnimationBuilder<double>(
-                                duration: Duration(milliseconds: 400 + (index * 100)),
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                builder: (context, value, child) {
-                                  return Transform.translate(
-                                    offset: Offset(0, 50 * (1 - value)),
-                                    child: Opacity(
-                                      opacity: value,
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child: _buildPricingCard(
-                                  index: index,
-                                  isSelected: isSelected,
-                                  title: plan['title'],
-                                  price: plan['price'],
-                                  period: plan['period'],
-                                  features: List<String>.from(plan['features']),
-                                  isPopular: plan['isPopular'],
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 20,
-                                offset: const Offset(0, -5),
-                              ),
-                            ],
-                          ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF4CAF50),
-                                  Color(0xFF45A049),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF4CAF50).withOpacity(0.4),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                final selectedPlan = plans[selectedPlanIndex];
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PaymentScreen(
-                                      isAnnual: selectedPlan['period'] == '/année',
-                                      planTitle: 'Abonnement ${selectedPlan['title']}',
-                                      price: selectedPlan['price'],
-                                      period: selectedPlan['period'],
-                                    ),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                foregroundColor: Colors.white,
-                                shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(vertical: 18),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                minimumSize: const Size(double.infinity, 56),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  Text(
-                                    'Continuer',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.arrow_forward_rounded, size: 24),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          const Text(
-            'Tarifs Entreprise',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: const Text(
-              'Choisissez le plan qui convient à votre entreprise',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPricingCard({
-    required int index,
-    required bool isSelected,
-    required String title,
-    required String price,
-    required String period,
-    required List<String> features,
-    required bool isPopular,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedPlanIndex = index;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        margin: const EdgeInsets.only(bottom: 20),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white,
-                    const Color(0xFF4CAF50).withOpacity(0.05),
-                  ],
-                )
-              : null,
-          color: isSelected ? null : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF4CAF50)
-                : Colors.grey.shade200,
-            width: isSelected ? 2.5 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isSelected
-                  ? const Color(0xFF4CAF50).withOpacity(0.25)
-                  : Colors.black.withOpacity(0.06),
-              blurRadius: isSelected ? 20 : 10,
-              offset: Offset(0, isSelected ? 8 : 4),
-              spreadRadius: isSelected ? 2 : 0,
-            ),
-          ],
-        ),
-        transform: isSelected ? (Matrix4.identity()..scale(1.02)) : Matrix4.identity(),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (isPopular)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFFFB300),
-                        const Color(0xFFFFC107),
-                      ],
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(
-                        Icons.star_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      SizedBox(width: 6),
-                      Text(
-                        'PLUS POPULAIRE',
+                    const Expanded(
+                      child: Text(
+                        'Abonnement',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
                         ),
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+              
+              // Description
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Deux formules, un seul objectif : vous connecter aux meilleures opportunités du Sénégal. Recevez chaque jour tous les appels d\'offres et donnez plus de visibilité à vos annonces !',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.95),
+                    fontSize: 14,
+                    height: 1.5,
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                  color: isSelected
-                                      ? const Color(0xFF4CAF50)
-                                      : Colors.black87,
-                                  letterSpacing: -0.5,
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Illustration
+              Image.asset(
+                'assets/images/tarif.png',
+                height: 200,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.people_outline,
+                      size: 100,
+                      color: Colors.white70,
+                    ),
+                  );
+                },
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Plans
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: plans.length,
+                  itemBuilder: (context, index) {
+                    final plan = plans[index];
+                    final isSelected = selectedPlanIndex == index;
+                    final isPopular = plan['isPopular'] == true;
+                    
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedPlanIndex = index;
+                        });
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16, left: 8, right: 8),
+                        decoration: BoxDecoration(
+                          color: isPopular ? const Color(0xFF4CAF50) : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected 
+                                ? (isPopular ? Colors.white : const Color(0xFF4CAF50))
+                                : (isPopular ? Colors.white.withOpacity(0.3) : Colors.grey[300]!),
+                            width: isSelected ? 3 : 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isPopular 
+                                  ? const Color(0xFF4CAF50).withOpacity(0.3)
+                                  : Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Badge PLUS POPULAIRE
+                            if (plan['badge'] != null)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFFFA726),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(16),
+                                    topRight: Radius.circular(16),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.star, color: Colors.white, size: 16),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      plan['badge'],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Row(
+                            
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  // Titre
                                   Text(
-                                    price,
+                                    plan['title'],
                                     style: TextStyle(
-                                      fontSize: 36,
+                                      fontSize: 22,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF4CAF50),
-                                      letterSpacing: -1,
+                                      color: isPopular ? Colors.white : Colors.black87,
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 10),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'FCFA',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF4CAF50),
-                                          ),
+                                  const SizedBox(height: 12),
+                                  
+                                  // Prix
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        plan['price'],
+                                        style: TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          color: isPopular ? Colors.white : const Color(0xFF4CAF50),
                                         ),
-                                        Text(
-                                          period,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[600],
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              plan['period'],
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: isPopular ? Colors.white.withOpacity(0.9) : Colors.grey[600],
+                                              ),
+                                            ),
+                                            Text(
+                                              plan['periodLabel'],
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: isPopular ? Colors.white.withOpacity(0.9) : Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
+                                  ),
+                                  
+                                  const SizedBox(height: 20),
+                                  
+                                  // Features
+                                  ...List<Widget>.from(
+                                    (plan['features'] as List<String>).map((feature) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle,
+                                              color: isPopular ? Colors.white : const Color(0xFF4CAF50),
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                feature,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: isPopular ? Colors.white.withOpacity(0.95) : Colors.grey[700],
+                                                  height: 1.4,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                        ),
-                        if (isSelected)
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF4CAF50),
-                                  Color(0xFF45A049),
-                                ],
-                              ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF4CAF50).withOpacity(0.4),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
                             ),
-                            child: const Icon(
-                              Icons.check_rounded,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      height: 1,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.grey.shade200,
-                            Colors.grey.shade100,
-                            Colors.grey.shade200,
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    ...features.asMap().entries.map((entry) {
-                      final feature = entry.value;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(top: 2),
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF4CAF50).withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.check_rounded,
-                                color: Color(0xFF4CAF50),
-                                size: 16,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                feature,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[800],
-                                  height: 1.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
+                    );
+                  },
+                ),
+              ),
+              
+              // Bouton Confirmer
+              Container(
+                padding: const EdgeInsets.all(24),
+                child: ElevatedButton(
+                  onPressed: () {
+                    final selectedPlan = plans[selectedPlanIndex];
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentScreen(
+                          isAnnual: selectedPlan['periodLabel'] == '/année',
+                          planTitle: selectedPlan['title'],
+                          price: selectedPlan['price'],
+                          period: selectedPlan['periodLabel'],
                         ),
-                      );
-                    }),
-                  ],
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF4CAF50),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    minimumSize: const Size(double.infinity, 56),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Confirmer cette offre',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Conditions
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16, left: 24, right: 24),
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                    children: const [
+                      TextSpan(text: 'En passant cette commande, vous acceptez les '),
+                      TextSpan(
+                        text: 'conditions d\'utilisation',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextSpan(text: ' et la '),
+                      TextSpan(
+                        text: 'politique de confidentialité',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextSpan(text: '.'),
+                    ],
+                  ),
                 ),
               ),
             ],

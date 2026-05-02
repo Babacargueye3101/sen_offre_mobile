@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/wave_payment_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class PaymentScreen extends StatefulWidget {
   final bool isAnnual;
@@ -985,17 +986,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
         final waveUrl = data['data']['wave_launch_url'];
         final checkoutId = data['data']['checkout_id'];
         
-        // Ouvrir l'URL Wave
-        if (await canLaunchUrl(Uri.parse(waveUrl))) {
-          await launchUrl(
-            Uri.parse(waveUrl),
-            mode: LaunchMode.externalApplication,
-          );
-          
-          // Surveiller le statut du paiement
-          _monitorPaymentStatus(checkoutId);
-        } else {
-          _showErrorDialog('Impossible d\'ouvrir l\'application Wave');
+        // Ouvrir l'URL Wave dans le navigateur ou WebView
+        final uri = Uri.parse(waveUrl);
+        try {
+          final canLaunch = await canLaunchUrl(uri);
+          if (canLaunch) {
+            final launched = await launchUrl(
+              uri,
+              mode: LaunchMode.externalApplication,
+            );
+            
+            if (launched) {
+              // Surveiller le statut du paiement
+              _monitorPaymentStatus(checkoutId);
+            } else {
+              // Fallback: utiliser WebView
+              _openWaveInWebView(waveUrl, checkoutId);
+            }
+          } else {
+            // Fallback: utiliser WebView
+            _openWaveInWebView(waveUrl, checkoutId);
+          }
+        } catch (e) {
+          // Fallback: utiliser WebView
+          _openWaveInWebView(waveUrl, checkoutId);
         }
       } else {
         _showErrorDialog(data['message'] ?? 'Erreur lors de l\'initialisation du paiement Wave');
@@ -1085,6 +1099,40 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Timeout atteint
     Navigator.of(context).pop(); // Fermer le dialog de monitoring
     _showErrorDialog('Délai d\'attente dépassé. Veuillez vérifier votre paiement.');
+  }
+
+  void _openWaveInWebView(String url, String checkoutId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Paiement Wave'),
+            backgroundColor: const Color(0xFF4CAF50),
+            foregroundColor: Colors.white,
+          ),
+          body: WebViewWidget(
+            controller: WebViewController()
+              ..setJavaScriptMode(JavaScriptMode.unrestricted)
+              ..setNavigationDelegate(
+                NavigationDelegate(
+                  onPageStarted: (String url) {
+                    // Vérifier si le paiement est terminé
+                    if (url.contains('success') || url.contains('callback')) {
+                      Navigator.pop(context);
+                      _monitorPaymentStatus(checkoutId);
+                    }
+                  },
+                  onPageFinished: (String url) {
+                    // Page chargée
+                  },
+                ),
+              )
+              ..loadRequest(Uri.parse(url)),
+          ),
+        ),
+      ),
+    );
   }
 
   void _showSuccessDialog() {
