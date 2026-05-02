@@ -9,73 +9,22 @@ class TarifsScreen extends StatefulWidget {
 }
 
 class _TarifsScreenState extends State<TarifsScreen> {
-  int selectedPlanIndex = 0; // Offre Annuelle par défaut
+  int selectedPlanIndex = 1; // Offre Mensuelle sélectionnée par défaut (comme la maquette)
 
   final List<Map<String, dynamic>> plans = [
     {
-      'title': 'Mensuel',
+      'title': 'Offre Annuelle',
+      'subtitle': 'Jusqu\'à 500 annonces - 20,000 FCFA/année',
+      'price': '20 000',
+      'periodLabel': '/année',
+      'badge': 'Meilleur Prix',
+    },
+    {
+      'title': 'Offre Mensuelle',
+      'subtitle': 'Jusqu\'à 130 annonces - 3,000 FCFA/mois',
       'price': '3 000',
-      'period': 'FCFA',
       'periodLabel': '/mois',
-      'maxAnnonces': '120',
-      'features': [
-        'Publiez et recevez jusqu\'à 120 annonces par mois',
-        'Accès aux appels d\'offres par Email uniquement',
-        '1 utilisateur',
-        'Conserver les annonces en ligne pendant 30 jours',
-      ],
       'badge': null,
-      'isPopular': false,
-    },
-    {
-      'title': 'Essential',
-      'price': '25 000',
-      'period': 'FCFA',
-      'periodLabel': '/année',
-      'maxAnnonces': '1200',
-      'features': [
-        'Publiez et recevez jusqu\'à 1200 annonces par année',
-        'Accès aux appels d\'offres par Email uniquement',
-        '1 utilisateur',
-        'Idéal pour les entrepreneurs individuels',
-        'Conserver les annonces en ligne pendant 365 jours',
-      ],
-      'badge': 'PLUS POPULAIRE',
-      'isPopular': true,
-    },
-    {
-      'title': 'Standard',
-      'price': '30 000',
-      'period': 'FCFA',
-      'periodLabel': '/année',
-      'maxAnnonces': '1500',
-      'features': [
-        'Publiez et recevez jusqu\'à 1500 annonces par année',
-        'Appels d\'offres par Email + SMS',
-        'Alertes quotidiennes rapides',
-        'Jusqu\'à 2 utilisateurs',
-        'Formule la plus équilibrée',
-        'Conserver les annonces en ligne pendant 365 jours',
-      ],
-      'badge': null,
-      'isPopular': false,
-    },
-    {
-      'title': 'Premium',
-      'price': '100 000',
-      'period': 'FCFA',
-      'periodLabel': '/année',
-      'maxAnnonces': '2500',
-      'features': [
-        'Publiez et recevez jusqu\'à 2500 annonces par année',
-        'Appels d\'offres par Email + SMS + WhatsApp',
-        'Support prioritaire (réponse rapide)',
-        'Utilisateurs illimités',
-        'Pour les PME & grandes structures',
-        'Conserver les annonces en ligne pendant 365 jours',
-      ],
-      'badge': null,
-      'isPopular': false,
     },
   ];
 
@@ -94,7 +43,8 @@ class _TarifsScreenState extends State<TarifsScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             children: [
               // Header
               Padding(
@@ -158,15 +108,13 @@ class _TarifsScreenState extends State<TarifsScreen> {
               const SizedBox(height: 20),
               
               // Plans
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: plans.length,
-                  itemBuilder: (context, index) {
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: List.generate(plans.length, (index) {
                     final plan = plans[index];
                     final isSelected = selectedPlanIndex == index;
-                    final isPopular = plan['isPopular'] == true;
-                    
+
                     return GestureDetector(
                       onTap: () {
                         setState(() {
@@ -174,153 +122,71 @@ class _TarifsScreenState extends State<TarifsScreen> {
                         });
                       },
                       child: Container(
-                        margin: const EdgeInsets.only(bottom: 16, left: 8, right: 8),
-                        decoration: BoxDecoration(
-                          color: isPopular ? const Color(0xFF4CAF50) : Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected 
-                                ? (isPopular ? Colors.white : const Color(0xFF4CAF50))
-                                : (isPopular ? Colors.white.withOpacity(0.3) : Colors.grey[300]!),
-                            width: isSelected ? 3 : 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isPopular 
-                                  ? const Color(0xFF4CAF50).withOpacity(0.3)
-                                  : Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 16,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3FA34A),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: isSelected ? 2.5 : 0.8,
+                          ),
+                        ),
+                        child: Row(
                           children: [
-                            // Badge PLUS POPULAIRE
-                            if (plan['badge'] != null)
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFFA726),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(16),
-                                    topRight: Radius.circular(16),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.star, color: Colors.white, size: 16),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      plan['badge'],
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            
-                            Padding(
-                              padding: const EdgeInsets.all(20),
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Titre
                                   Text(
                                     plan['title'],
-                                    style: TextStyle(
-                                      fontSize: 22,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: isPopular ? Colors.white : Colors.black87,
                                     ),
                                   ),
-                                  const SizedBox(height: 12),
-                                  
-                                  // Prix
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        plan['price'],
-                                        style: TextStyle(
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.bold,
-                                          color: isPopular ? Colors.white : const Color(0xFF4CAF50),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 8),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              plan['period'],
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: isPopular ? Colors.white.withOpacity(0.9) : Colors.grey[600],
-                                              ),
-                                            ),
-                                            Text(
-                                              plan['periodLabel'],
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: isPopular ? Colors.white.withOpacity(0.9) : Colors.grey[600],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  
-                                  const SizedBox(height: 20),
-                                  
-                                  // Features
-                                  ...List<Widget>.from(
-                                    (plan['features'] as List<String>).map((feature) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(bottom: 12),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Icon(
-                                              Icons.check_circle,
-                                              color: isPopular ? Colors.white : const Color(0xFF4CAF50),
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Text(
-                                                feature,
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: isPopular ? Colors.white.withOpacity(0.95) : Colors.grey[700],
-                                                  height: 1.4,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    plan['subtitle'],
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.95),
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
+                            if (plan['badge'] != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2E7D34),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  plan['badge'],
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
                     );
-                  },
+                  }),
                 ),
               ),
+              const SizedBox(height: 24),
               
               // Bouton Confirmer
               Container(
@@ -393,6 +259,7 @@ class _TarifsScreenState extends State<TarifsScreen> {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),

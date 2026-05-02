@@ -358,6 +358,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           '${widget.price} Fcfa',
@@ -382,65 +383,71 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                       ],
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: selectedPaymentMethod.isNotEmpty
-                            ? const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF4CAF50),
-                                  Color(0xFF45A049),
-                                ],
-                              )
-                            : null,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: selectedPaymentMethod.isNotEmpty
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF4CAF50).withOpacity(0.4),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: ElevatedButton(
-                        onPressed: selectedPaymentMethod.isNotEmpty
-                            ? () {
-                                // Traiter le paiement
-                                _processPayment();
-                              }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: selectedPaymentMethod.isNotEmpty
-                              ? Colors.transparent
-                              : Colors.grey[300],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 18,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: selectedPaymentMethod.isNotEmpty
+                              ? const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFF4CAF50),
+                                    Color(0xFF45A049),
+                                  ],
+                                )
+                              : null,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: selectedPaymentMethod.isNotEmpty
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF4CAF50).withOpacity(0.4),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ]
+                              : null,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.lock_outline, size: 20),
-                            SizedBox(width: 12),
-                            Text(
-                              'Payer maintenant',
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
+                        child: ElevatedButton(
+                          onPressed: selectedPaymentMethod.isNotEmpty
+                              ? () {
+                                  // Traiter le paiement
+                                  _processPayment();
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: selectedPaymentMethod.isNotEmpty
+                                ? Colors.transparent
+                                : Colors.grey[300],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
                             ),
-                          ],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.lock_outline, size: 18),
+                              SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'Payer maintenant',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -986,30 +993,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
         final waveUrl = data['data']['wave_launch_url'];
         final checkoutId = data['data']['checkout_id'];
         
-        // Ouvrir l'URL Wave dans le navigateur ou WebView
-        final uri = Uri.parse(waveUrl);
+        // Extraire l'URL HTTPS réelle depuis wave://capture/https://...
+        String actualUrl = waveUrl;
+        if (waveUrl.startsWith('wave://capture/')) {
+          actualUrl = waveUrl.replaceFirst('wave://capture/', 'https://');
+        }
+        
+        // Ouvrir l'URL HTTPS dans le navigateur
+        final uri = Uri.parse(actualUrl);
         try {
-          final canLaunch = await canLaunchUrl(uri);
-          if (canLaunch) {
-            final launched = await launchUrl(
-              uri,
-              mode: LaunchMode.externalApplication,
-            );
-            
-            if (launched) {
-              // Surveiller le statut du paiement
-              _monitorPaymentStatus(checkoutId);
-            } else {
-              // Fallback: utiliser WebView
-              _openWaveInWebView(waveUrl, checkoutId);
-            }
+          final launched = await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
+          
+          if (launched) {
+            // Surveiller le statut du paiement
+            _monitorPaymentStatus(checkoutId);
           } else {
             // Fallback: utiliser WebView
-            _openWaveInWebView(waveUrl, checkoutId);
+            _openWaveInWebView(actualUrl, checkoutId);
           }
         } catch (e) {
           // Fallback: utiliser WebView
-          _openWaveInWebView(waveUrl, checkoutId);
+          _openWaveInWebView(actualUrl, checkoutId);
         }
       } else {
         _showErrorDialog(data['message'] ?? 'Erreur lors de l\'initialisation du paiement Wave');
@@ -1102,6 +1109,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _openWaveInWebView(String url, String checkoutId) {
+    // Extraire l'URL HTTPS réelle depuis wave://capture/https://...
+    String actualUrl = url;
+    if (url.startsWith('wave://capture/')) {
+      actualUrl = url.replaceFirst('wave://capture/', 'https://');
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1128,7 +1141,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   },
                 ),
               )
-              ..loadRequest(Uri.parse(url)),
+              ..loadRequest(Uri.parse(actualUrl)),
           ),
         ),
       ),
