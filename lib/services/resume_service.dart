@@ -7,7 +7,7 @@ import 'user_service.dart';
 class ResumeService {
   static const String _resumesEndpoint = '/resumes';
 
-  /// Récupérer les CV de l'utilisateur connecté
+  /// Récupérer les liasses de l'utilisateur connecté
   static Future<ResumeResponse> getUserResumes({
     int perPage = 10,
   }) async {
@@ -52,7 +52,7 @@ class ResumeService {
         final jsonResponse = json.decode(responseBody);
         return ResumeResponse.fromJson(jsonResponse);
       } else {
-        throw Exception('Erreur lors de la récupération des CV: ${httpResponse.statusCode}');
+        throw Exception('Erreur lors de la récupération des liasses: ${httpResponse.statusCode}');
       }
     } catch (e) {
       print('Erreur getUserResumes: $e');
@@ -60,7 +60,7 @@ class ResumeService {
     }
   }
 
-  /// Postuler à une offre avec un CV existant ou nouveau
+  /// Postuler à une offre avec une liasse existante ou nouvelle
   static Future<Map<String, dynamic>> applyToPost({
     required int postId,
     required String body,
@@ -118,7 +118,7 @@ class ResumeService {
         bodyBytes.addAll(utf8.encode('$resumeId\r\n'));
       }
       
-      // Ajouter le fichier CV si fourni
+      // Ajouter le fichier liasse si fourni
       if (resumeFile != null) {
         final fileBytes = await resumeFile.readAsBytes();
         final filename = resumeFile.path.split('/').last;

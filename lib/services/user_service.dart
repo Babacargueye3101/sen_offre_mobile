@@ -44,7 +44,7 @@ class UserService {
         countryFlagUrl: response.result.countryFlagUrl,
         countryCode: null,
         languageCode: null,
-        userTypeId: 2, // Par défaut demandeur d'emploi
+        userTypeId: 2, // Par défaut demandeur d'appel d'offre
         genderId: 1, // Par défaut
         photo: null,
         about: null,

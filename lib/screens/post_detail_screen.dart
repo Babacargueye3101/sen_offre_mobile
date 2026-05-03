@@ -164,7 +164,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Choisir un CV',
+                    'Choisir une liasse',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -184,10 +184,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: resumes.length + 1, // +1 pour l'option "Nouveau CV"
+                itemCount: resumes.length + 1, // +1 pour l'option "Nouvelle liasse"
                 itemBuilder: (context, index) {
                   if (index == resumes.length) {
-                    // Option pour uploader un nouveau CV
+                    // Option pour uploader une nouvelle liasse
                     return InkWell(
                       onTap: () {
                         Navigator.pop(context);
@@ -222,7 +222,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             const SizedBox(width: 16),
                             const Expanded(
                               child: Text(
-                                'Uploader un nouveau CV',
+                                'Uploader une nouvelle liasse',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -316,9 +316,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text('Uploader un CV'),
+        title: const Text('Uploader une liasse'),
         content: const Text(
-          'Vous devez uploader un CV pour postuler à cette offre. Formats acceptés : PDF, DOC, DOCX, JPG, PNG',
+          'Vous devez uploader une liasse pour postuler à cette offre. Formats acceptés : PDF, DOC, DOCX, JPG, PNG',
         ),
         actions: [
           TextButton(

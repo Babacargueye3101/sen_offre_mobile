@@ -108,7 +108,7 @@ class AzureOpenAIService {
   /// Analyser une requête utilisateur et extraire les paramètres de recherche
   static Future<Map<String, dynamic>> analyzeSearchQuery(String query) async {
     try {
-      final systemPrompt = '''Tu es un assistant spécialisé dans l'analyse de requêtes de recherche d'emploi.
+      final systemPrompt = '''Tu es un assistant spécialisé dans l'analyse de requêtes de recherche d'appel d'offre.
 Ton rôle est d'extraire les informations pertinentes d'une requête utilisateur et de les structurer en JSON.
 
 Extrait les informations suivantes si elles sont présentes:

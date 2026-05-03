@@ -228,7 +228,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Postulez à une offre d\'emploi pour commencer une conversation avec le recruteur',
+                    'Postulez à un appel d\'offre pour commencer une conversation avec le recruteur',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey[700],

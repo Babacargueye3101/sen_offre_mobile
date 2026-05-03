@@ -107,7 +107,7 @@ class JobSearchAIService {
       'mes', 'tes', 'ses', 'notre', 'votre', 'leur', 'nos', 'vos', 'leurs',
       'sur', 'dans', 'pour', 'avec', 'sans', 'par', 'en', 'y',
       'cherche', 'recherche', 'trouve', 'trouver', 'veux', 'veut', 'voudrais',
-      'offre', 'offres', 'emploi', 'emplois', 'job', 'jobs', 'poste', 'postes',
+      'offre', 'offres', 'appel d\'offre', 'appels d\'offre', 'job', 'jobs', 'poste', 'postes',
       'travail', 'correspond', 'correspondant', 'correspondante',
     ];
 
@@ -291,7 +291,7 @@ $postsDetails
 === FIN DE LA BASE DE DONNEES ===''';
       }
 
-      final systemPrompt = '''Vous etes un assistant virtuel expert en recherche d'emploi au Senegal connecte a une base de donnees d'offres reelles.
+      final systemPrompt = '''Vous etes un assistant virtuel expert en recherche d'appel d'offre au Senegal connecte a une base de donnees d'offres reelles.
 
 Votre mission:
 - Analyser les offres de la base de donnees pour repondre aux questions

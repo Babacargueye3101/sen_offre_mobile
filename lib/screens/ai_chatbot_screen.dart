@@ -26,7 +26,7 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
   void _addWelcomeMessage() {
     setState(() {
       _messages.add(ChatMessage(
-        text: 'Bonjour! 👋\n\nJe suis votre assistant virtuel pour la recherche d\'emploi. Je peux vous aider à:\n\n• Trouver des offres d\'emploi\n• Rechercher par période (mois dernier, année passée, etc.)\n• Filtrer par localisation ou catégorie\n• Répondre à vos questions sur les offres\n\nComment puis-je vous aider aujourd\'hui?',
+        text: 'Bonjour! 👋\n\nJe suis votre assistant virtuel pour la recherche d\'appel d\'offre. Je peux vous aider à:\n\n• Trouver des appels d\'offre\n• Rechercher par période (mois dernier, année passée, etc.)\n• Filtrer par localisation ou catégorie\n• Répondre à vos questions sur les offres\n\nComment puis-je vous aider aujourd\'hui?',
         isUser: false,
         timestamp: DateTime.now(),
       ));
@@ -156,19 +156,19 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
     
     // Réponses prédéfinies pour les questions courantes
     if (messageLower.contains('bonjour') || messageLower.contains('salut') || messageLower.contains('hello') || messageLower.contains('hi')) {
-      return 'Bonjour ! 👋\n\nJe suis votre assistant virtuel pour la recherche d\'emploi. Je peux vous aider à trouver des offres qui correspondent à vos critères.\n\nQue recherchez-vous aujourd\'hui ?';
+      return 'Bonjour ! 👋\n\nJe suis votre assistant virtuel pour la recherche d\'appel d\'offre. Je peux vous aider à trouver des offres qui correspondent à vos critères.\n\nQue recherchez-vous aujourd\'hui ?';
     }
     
     if (messageLower.contains('aide') || messageLower.contains('help') || messageLower.contains('aider')) {
-      return 'Bien sûr ! 😊\n\nJe peux vous aider à :\n\n• 🔍 Trouver des offres d\'emploi\n• 📅 Rechercher par période (mois dernier, année passée...)\n• 📍 Filtrer par localisation (Dakar, Thiès...)\n• 💼 Chercher par métier ou compétence\n\nTapez simplement ce que vous cherchez, par exemple :\n"Je cherche un emploi de développeur"';
+      return 'Bien sûr ! 😊\n\nJe peux vous aider à :\n\n• 🔍 Trouver des appels d\'offre\n• 📅 Rechercher par période (mois dernier, année passée...)\n• 📍 Filtrer par localisation (Dakar, Thiès...)\n• 💼 Chercher par métier ou compétence\n\nTapez simplement ce que vous cherchez, par exemple :\n"Je cherche un appel d\'offre de développeur"';
     }
     
     if ((messageLower.contains('comment') && messageLower.contains('postuler')) || messageLower.contains('candidature')) {
-      return 'Pour postuler à une offre : 👍\n\n1️⃣ Cherchez des offres qui vous intéressent\n2️⃣ Cliquez sur une offre pour voir les détails\n3️⃣ Suivez les instructions de candidature\n4️⃣ Préparez votre CV et lettre de motivation\n\nBonne chance ! 🎯';
+      return 'Pour postuler à un appel d\'offre : 👍\n\n1️⃣ Cherchez des offres qui vous intéressent\n2️⃣ Cliquez sur une offre pour voir les détails\n3️⃣ Suivez les instructions de candidature\n4️⃣ Préparez votre liasse et lettre de motivation\n\nBonne chance ! 🎯';
     }
     
     if (messageLower.contains('conseil') || messageLower.contains('astuce') || messageLower.contains('tip')) {
-      return 'Voici mes meilleurs conseils : 💡\n\n✅ Personnalisez votre CV pour chaque offre\n✅ Postulez rapidement aux offres récentes\n✅ Soignez votre lettre de motivation\n✅ Préparez-vous bien pour les entretiens\n✅ Suivez vos candidatures\n\nVoulez-vous chercher des offres maintenant ?';
+      return 'Voici mes meilleurs conseils : 💡\n\n✅ Personnalisez votre liasse pour chaque offre\n✅ Postulez rapidement aux offres récentes\n✅ Soignez votre lettre de motivation\n✅ Préparez-vous bien pour les entretiens\n✅ Suivez vos candidatures\n\nVoulez-vous chercher des offres maintenant ?';
     }
     
     if (messageLower.contains('merci') || messageLower.contains('thank')) {
@@ -176,15 +176,15 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
     }
     
     if (messageLower.contains('combien') || messageLower.contains('nombre')) {
-      return 'Pour connaître le nombre d\'offres disponibles, tapez simplement :\n\n"Je cherche un emploi"\n\nJe vous montrerai toutes les offres récentes ! 📊';
+      return 'Pour connaître le nombre d\'offres disponibles, tapez simplement :\n\n"Je cherche un appel d\'offre"\n\nJe vous montrerai toutes les offres récentes ! 📊';
     }
     
     if (messageLower.contains('qui es-tu') || messageLower.contains('qui êtes-vous') || messageLower.contains('c\'est quoi')) {
-      return 'Je suis l\'assistant virtuel de SenOffre ! 🤖\n\nMa mission est de vous aider à trouver l\'emploi qui vous correspond au Sénégal.\n\nJe peux chercher des offres par mots-clés, période, ou localisation. Comment puis-je vous aider ? 😊';
+      return 'Je suis l\'assistant virtuel de SenOffre ! 🤖\n\nMa mission est de vous aider à trouver l\'appel d\'offre qui vous correspond au Sénégal.\n\nJe peux chercher des offres par mots-clés, période, ou localisation. Comment puis-je vous aider ? 😊';
     }
     
     // Réponse par défaut
-    return 'Je comprends que vous avez une question, mais je ne suis pas sûr de pouvoir y répondre directement. 😕\n\nVoici ce que je peux faire pour vous :\n\n🔍 Chercher des offres d\'emploi\nExemple : "Je cherche un emploi de développeur"\n\n📅 Filtrer par période\nExemple : "Offres du mois dernier"\n\n📍 Filtrer par ville\nExemple : "Emploi à Dakar"\n\nEssayez l\'une de ces recherches ! 👍';
+    return 'Je comprends que vous avez une question, mais je ne suis pas sûr de pouvoir y répondre directement. 😕\n\nVoici ce que je peux faire pour vous :\n\n🔍 Chercher des appels d\'offre\nExemple : "Je cherche un appel d\'offre de développeur"\n\n📅 Filtrer par période\nExemple : "Offres du mois dernier"\n\n📍 Filtrer par ville\nExemple : "Appel d\'offre à Dakar"\n\nEssayez l\'une de ces recherches ! 👍';
   }
 
   void _scrollToBottom() {

@@ -16,12 +16,12 @@ class _FaqScreenState extends State<FaqScreen> {
       'answer': 'Pour créer un compte, cliquez sur "S\'inscrire" sur la page d\'accueil. Remplissez le formulaire avec vos informations personnelles (nom, email, mot de passe) et validez. Vous recevrez un email de confirmation.',
     },
     {
-      'question': 'Comment postuler à une offre d\'emploi ?',
-      'answer': 'Pour postuler à une offre, consultez les détails de l\'offre qui vous intéresse, puis cliquez sur le bouton "Postuler". Vous devrez sélectionner ou télécharger votre CV, puis rédiger un message de motivation (minimum 20 caractères).',
+      'question': 'Comment postuler à un appel d\'offre ?',
+      'answer': 'Pour postuler à un appel d\'offre, consultez les détails de l\'offre qui vous intéresse, puis cliquez sur le bouton "Postuler". Vous devrez sélectionner ou télécharger votre liasse, puis rédiger un message de motivation (minimum 20 caractères).',
     },
     {
-      'question': 'Quels formats de CV sont acceptés ?',
-      'answer': 'Nous acceptons les formats suivants : PDF, DOC, DOCX, JPG et PNG. La taille maximale du fichier est de 5 MB. Assurez-vous que votre CV est à jour et bien structuré.',
+      'question': 'Quels formats de liasse sont acceptés ?',
+      'answer': 'Nous acceptons les formats suivants : PDF, DOC, DOCX, JPG et PNG. La taille maximale du fichier est de 5 MB. Assurez-vous que votre liasse est à jour et bien structurée.',
     },
     {
       'question': 'Comment modifier mon profil ?',
@@ -32,7 +32,7 @@ class _FaqScreenState extends State<FaqScreen> {
       'answer': 'Dans l\'onglet "Profil", sélectionnez l\'onglet "Historique". Vous y trouverez la liste de toutes vos candidatures avec les détails des postes auxquels vous avez postulé et vos messages de motivation.',
     },
     {
-      'question': 'Comment filtrer les offres d\'emploi ?',
+      'question': 'Comment filtrer les appels d\'offre ?',
       'answer': 'Sur la page d\'accueil ou la page des offres, utilisez les filtres disponibles : Type d\'offre (CDI, CDD, Stage, etc.), Localisation (ville) et Catégorie. Cliquez sur les chips pour ouvrir les options de filtrage.',
     },
     {

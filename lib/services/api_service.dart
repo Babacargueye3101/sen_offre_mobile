@@ -119,7 +119,7 @@ class ApiService {
 
   /// Convertir le type de compte en user_type_id
   static int getUserTypeId(String accountType) {
-    // Map userType to user_type_id: 1 = Employeur, 2 = Demandeur d'emploi
+    // Map userType to user_type_id: 1 = Employeur, 2 = Demandeur d'appel d'offre
     switch (accountType.toLowerCase()) {
       case 'societe':
       case 'employer':
